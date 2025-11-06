@@ -1,4 +1,4 @@
-import { ShoppingCart, Heart, Search, User, Menu, Sun, Moon } from "lucide-react";
+import { ShoppingCart, Heart, Search, User, Menu, Sun, Moon, ShieldCheck } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
+import logoImage from "@assets/IMG-20251106-WA0028_1762432081376.jpg";
 
 export function Navbar() {
   const { user, signInWithGoogle, logout } = useAuth();
@@ -49,9 +50,13 @@ export function Navbar() {
       <div className="container mx-auto max-w-7xl px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           <Link href="/" data-testid="link-home">
-            <div className="flex items-center gap-2 cursor-pointer hover-elevate rounded-md px-3 py-2">
-              <div className="text-2xl font-bold text-primary">PB</div>
-              <span className="hidden sm:inline font-semibold text-lg">Peanut Butter Co.</span>
+            <div className="flex items-center gap-3 cursor-pointer hover-elevate rounded-md px-3 py-2">
+              <img 
+                src={logoImage} 
+                alt="Ornut Logo" 
+                className="h-10 w-10 rounded-full object-cover"
+              />
+              <span className="hidden sm:inline font-bold text-xl text-foreground">ORNUT</span>
             </div>
           </Link>
 
@@ -77,6 +82,12 @@ export function Navbar() {
             </Link>
             <Link href="/faq">
               <Button variant="ghost" data-testid="link-faq">FAQ</Button>
+            </Link>
+            <Link href="/admin/login">
+              <Button variant="ghost" className="gap-2" data-testid="link-admin">
+                <ShieldCheck className="h-4 w-4" />
+                Admin
+              </Button>
             </Link>
           </nav>
 
@@ -190,6 +201,12 @@ export function Navbar() {
                   <Link href="/faq" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="ghost" className="w-full justify-start" data-testid="link-faq-mobile">
                       FAQ
+                    </Button>
+                  </Link>
+                  <Link href="/admin/login" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start gap-2" data-testid="link-admin-mobile">
+                      <ShieldCheck className="h-4 w-4" />
+                      Admin
                     </Button>
                   </Link>
                 </nav>

@@ -31,11 +31,11 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
         <div className="relative z-10 container mx-auto max-w-7xl px-4 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            Premium Artisanal Peanut Butter
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            Discover Ornut
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
-            Made with love from fresh roasted peanuts. Natural, delicious, and crafted to perfection.
+            Premium artisanal peanut butter crafted with passion. Natural ingredients, extraordinary taste.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link href="/products">
