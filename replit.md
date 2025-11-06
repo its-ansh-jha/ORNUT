@@ -1,7 +1,7 @@
-# Peanut Butter Ecommerce Website
+# Ornut Peanut Butter Ecommerce Website
 
 ## Overview
-A full-featured ecommerce platform for selling artisanal peanut butter products with Firebase authentication, Cashfree payment integration, admin panel, order management, and delivery tracking.
+A full-featured ecommerce platform for Ornut - premium artisanal peanut butter brand. Features include Firebase authentication, production-ready Cashfree payment integration, admin panel, order management, and real-time delivery tracking. Designed with warm brown and cream brand colors inspired by the Ornut squirrel mascot logo.
 
 ## Tech Stack
 - **Frontend**: React, TypeScript, Tailwind CSS, Shadcn UI
@@ -61,17 +61,25 @@ A full-featured ecommerce platform for selling artisanal peanut butter products 
 - `VITE_FIREBASE_PROJECT_ID` - Firebase project ID
 - `VITE_FIREBASE_APP_ID` - Firebase app ID
 - `VITE_FIREBASE_API_KEY` - Firebase API key
-- `VITE_CASHFREE_APP_ID` - Cashfree app ID
+- `VITE_CASHFREE_APP_ID` - Cashfree app ID for frontend SDK
+- `VITE_CASHFREE_MODE` - "production" or "sandbox" (defaults to sandbox)
+- `CASHFREE_APP_ID` - Cashfree app ID for backend API
+- `CASHFREE_SECRET_KEY` - Cashfree secret key for backend API
 - `VITE_FORMSPREE_FORM_ID` - Formspree form ID
 - `ADMIN_PASSWORD_HASH` - Hashed admin password (32-64 chars)
 - `SESSION_SECRET` - Express session secret
 - `DATABASE_URL` - PostgreSQL connection string
 
 ## Design System
-- **Colors**: Green and white theme (primary: hsl(142 76% 36%))
-- **Typography**: Plus Jakarta Sans (headings), Inter (body)
+- **Colors**: Warm brown and cream theme inspired by Ornut logo
+  - Primary Brown: hsl(30 35% 44%) - #8B6F47
+  - Cream: hsl(36 48% 91%) - #F5E6D3
+  - Accent Tan: hsl(24 28% 58%) - #B89968
+  - Full palette defined in client/src/index.css with dark mode support
+- **Typography**: Inter (all text)
 - **Spacing**: Consistent 4, 6, 8, 12, 16, 24 units
-- **Components**: Shadcn UI with custom green theme
+- **Components**: Shadcn UI with custom Ornut brown/cream theme
+- **Logo**: Circular squirrel logo integrated in navbar
 
 ## Admin Panel
 - Protected by 32-64 character password
@@ -154,11 +162,41 @@ console.log(hash); // Copy this to ADMIN_PASSWORD_HASH env var
 ```
 
 ## Payment Integration (Cashfree)
-The checkout flow is set up to integrate with Cashfree:
-- Order total calculated with shipping costs
-- Order created in database before payment
-- Cashfree order ID can be generated on backend
-- Payment verification happens before order confirmation
+**Production-Ready Cashfree Integration:**
+
+### Backend (`server/routes.ts`):
+- `POST /api/payment/create-order` - Creates Cashfree payment session
+  - Calculates order total with shipping
+  - Creates order in database with "pending" status
+  - Generates Cashfree order with customer details
+  - Returns `payment_session_id` and `order_id` to frontend
+  - Sends order confirmation email via Formspree
+  
+- `POST /api/payment/verify` - Verifies payment status
+  - Fetches order status from Cashfree
+  - Updates database order status to "paid" or "failed"
+  - Returns verification result
+
+### Frontend (`client/src/pages/checkout.tsx`):
+- Initializes Cashfree SDK with configurable mode (sandbox/production)
+- Opens Cashfree checkout modal for payment
+- Handles payment success/failure
+- Verifies payment with backend before confirmation
+
+### Configuration:
+- **Sandbox Mode** (default): For testing without real transactions
+  - Set `VITE_CASHFREE_MODE=sandbox` (or leave unset)
+  - Use Cashfree test credentials
+  
+- **Production Mode**: For real transactions
+  - Set `VITE_CASHFREE_MODE=production`
+  - Set `CASHFREE_APP_ID` and `CASHFREE_SECRET_KEY` with production credentials
+  - Test thoroughly before going live
+
+### Security:
+- Payment verification done server-side
+- Customer data validated before creating order
+- Order status updates only after successful payment verification
 
 ## Email Notifications (Formspree)
 Order confirmation emails are sent via Formspree:
@@ -171,7 +209,17 @@ Order confirmation emails are sent via Formspree:
 2. **Cashfree Integration**: Payment flow requires additional Cashfree SDK integration
 3. **Firebase Admin SDK**: Currently using Firebase REST API for token verification (production should use Admin SDK with service account)
 
-## Recent Changes
+## Recent Changes (November 2025)
+- ✅ **Complete UI Redesign**: Warm brown/cream Ornut brand colors replacing green theme
+- ✅ **Branding Update**: Integrated Ornut logo, changed all text to "ORNUT" brand name
+- ✅ **Order Numbers**: Changed prefix from "PB..." to "ORNUT..." for brand consistency
+- ✅ **Navigation**: Added admin login link to navbar (desktop & mobile)
+- ✅ **Cashfree Payment Integration**: Production-ready payment system
+  - Backend endpoints for order creation and payment verification
+  - Frontend SDK integration with configurable sandbox/production mode
+  - Secure payment flow with server-side verification
+  - Email notifications via Formspree
+- ✅ **Design Guidelines**: Created comprehensive design_guidelines.md for Ornut theme
 - ✅ Complete ecommerce platform with all MVP features
 - ✅ Secure Firebase authentication with ID token verification
 - ✅ Admin panel with product and order management  
@@ -180,4 +228,3 @@ Order confirmation emails are sent via Formspree:
 - ✅ User ownership checks on all protected endpoints
 - ✅ SEO meta tags and Open Graph tags
 - ✅ Responsive design with dark mode support
-- ✅ Green and white brand theme implementation

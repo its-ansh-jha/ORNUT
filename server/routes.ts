@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import { insertProductSchema, insertCartItemSchema, insertWishlistItemSchema, insertOrderSchema } from "@shared/schema";
 import { z } from "zod";
+import Cashfree from "cashfree-pg";
 
 async function verifyFirebaseToken(req: Request, res: Response, next: NextFunction) {
   try {
@@ -342,6 +343,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: error.errors });
       }
       res.status(500).json({ error: "Failed to create order" });
+    }
+  });
+
+  app.post("/api/payment/create-order", verifyFirebaseToken, async (req, res) => {
+    try {
+      const userId = req.userId!;
+      const { shippingAddress, contactDetails } = req.body;
+      
+      const cartItems = await storage.getCartItems(userId);
+      if (cartItems.length === 0) {
+        return res.status(400).json({ error: "Cart is empty" });
+      }
+      
+      const subtotal = cartItems.reduce(
+        (sum, item) => sum + Number(item.product.price) * item.quantity,
+        0
+      );
+      const shipping = subtotal >= 50 ? 0 : 9.99;
+      const totalAmount = subtotal + shipping;
+      
+      const orderNumber = `ORNUT${Date.now().toString().slice(-8)}`;
+      
+      const cashfreeAppId = process.env.CASHFREE_APP_ID;
+      const cashfreeSecretKey = process.env.CASHFREE_SECRET_KEY;
+      
+      if (!cashfreeAppId || !cashfreeSecretKey) {
+        return res.status(500).json({ error: "Payment gateway not configured" });
+      }
+      
+      Cashfree.XClientId = cashfreeAppId;
+      Cashfree.XClientSecret = cashfreeSecretKey;
+      Cashfree.XEnvironment = process.env.NODE_ENV === "production" 
+        ? Cashfree.Environment.PRODUCTION 
+        : Cashfree.Environment.SANDBOX;
+      
+      const request = {
+        order_amount: totalAmount,
+        order_currency: "INR",
+        order_id: orderNumber,
+        customer_details: {
+          customer_id: userId.slice(0, 50),
+          customer_name: contactDetails.fullName,
+          customer_email: contactDetails.email,
+          customer_phone: contactDetails.phone,
+        },
+        order_meta: {
+          return_url: `${req.protocol}://${req.get('host')}/payment-status?order_id=${orderNumber}`,
+        },
+      };
+      
+      const response = await Cashfree.PGCreateOrder("2023-08-01", request);
+      
+      const orderData = {
+        userId,
+        orderNumber,
+        status: "payment_pending",
+        deliveryStatus: "order_placed",
+        totalAmount: totalAmount.toString(),
+        shippingAddress,
+        contactDetails,
+      };
+      
+      const orderItems = cartItems.map((item) => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        productImage: item.product.image,
+        quantity: item.quantity,
+        price: item.product.price,
+      }));
+      
+      const order = await storage.createOrder(orderData, orderItems);
+      
+      res.json({
+        payment_session_id: response.data.payment_session_id,
+        order_id: orderNumber,
+        order_details: order,
+      });
+    } catch (error) {
+      console.error("Payment order creation error:", error);
+      res.status(500).json({ error: "Failed to create payment order" });
+    }
+  });
+
+  app.post("/api/payment/verify", verifyFirebaseToken, async (req, res) => {
+    try {
+      const { orderId } = req.body;
+      
+      if (!orderId) {
+        return res.status(400).json({ error: "Order ID required" });
+      }
+      
+      const cashfreeAppId = process.env.CASHFREE_APP_ID;
+      const cashfreeSecretKey = process.env.CASHFREE_SECRET_KEY;
+      
+      if (!cashfreeAppId || !cashfreeSecretKey) {
+        return res.status(500).json({ error: "Payment gateway not configured" });
+      }
+      
+      Cashfree.XClientId = cashfreeAppId;
+      Cashfree.XClientSecret = cashfreeSecretKey;
+      Cashfree.XEnvironment = process.env.NODE_ENV === "production" 
+        ? Cashfree.Environment.PRODUCTION 
+        : Cashfree.Environment.SANDBOX;
+      
+      const response = await Cashfree.PGFetchOrder("2023-08-01", orderId);
+      
+      if (response.data.order_status === "PAID") {
+        const order = await storage.getOrderByOrderNumber(orderId);
+        if (order) {
+          await storage.updateOrderStatus(order.id, "confirmed");
+          await storage.clearCart(req.userId!);
+          
+          try {
+            const formspreeUrl = `https://formspree.io/f/${process.env.VITE_FORMSPREE_FORM_ID}`;
+            const emailBody = {
+              subject: `New Order Payment Confirmed: ${orderId}`,
+              message: `Payment confirmed for order ${orderId}. Total: ${response.data.order_amount} INR`,
+            };
+            
+            await fetch(formspreeUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(emailBody),
+            });
+          } catch (emailError) {
+            console.error("Email notification error:", emailError);
+          }
+        }
+        
+        return res.json({ 
+          success: true, 
+          status: "PAID",
+          order: order,
+        });
+      } else {
+        return res.json({ 
+          success: false, 
+          status: response.data.order_status,
+        });
+      }
+    } catch (error) {
+      console.error("Payment verification error:", error);
+      res.status(500).json({ error: "Failed to verify payment" });
     }
   });
 

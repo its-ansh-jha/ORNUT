@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { load } from "@cashfreepayments/cashfree-js";
 
 const checkoutSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -37,11 +38,32 @@ export default function Checkout() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [cashfree, setCashfree] = useState<any>(null);
 
   const { data: cartItems = [] } = useQuery<any[]>({
     queryKey: ["/api/cart"],
     enabled: !!user,
   });
+
+  useEffect(() => {
+    const initializeSDK = async () => {
+      try {
+        const cashfreeMode = import.meta.env.VITE_CASHFREE_MODE === "production" 
+          ? "production" 
+          : "sandbox";
+        const cf = await load({ mode: cashfreeMode });
+        setCashfree(cf);
+      } catch (error) {
+        console.error("Cashfree SDK initialization error:", error);
+        toast({
+          title: "Payment system unavailable",
+          description: "Please refresh the page and try again",
+          variant: "destructive",
+        });
+      }
+    };
+    initializeSDK();
+  }, [toast]);
 
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -56,9 +78,9 @@ export default function Checkout() {
     },
   });
 
-  const placeOrderMutation = useMutation({
+  const createPaymentOrderMutation = useMutation({
     mutationFn: (data: CheckoutFormData) =>
-      apiRequest("POST", "/api/orders", {
+      apiRequest("POST", "/api/payment/create-order", {
         shippingAddress: {
           address: data.address,
           city: data.city,
@@ -71,19 +93,71 @@ export default function Checkout() {
           phone: data.phone,
         },
       }),
-    onSuccess: (data: any) => {
-      toast({
-        title: "Order placed successfully!",
-        description: `Order #${data.orderNumber}`,
-      });
-      navigate(`/orders/${data.id}`);
+    onSuccess: async (data: any) => {
+      if (!cashfree) {
+        toast({
+          title: "Payment error",
+          description: "Payment system not initialized",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        const checkoutOptions = {
+          paymentSessionId: data.payment_session_id,
+          redirectTarget: "_modal",
+        };
+
+        const result = await cashfree.checkout(checkoutOptions);
+        
+        if (result.error) {
+          toast({
+            title: "Payment failed",
+            description: result.error.message || "Please try again",
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+          return;
+        }
+
+        if (result.paymentDetails) {
+          const verifyResponse = await apiRequest("POST", "/api/payment/verify", {
+            orderId: data.order_id,
+          });
+
+          if (verifyResponse.success) {
+            toast({
+              title: "Payment successful!",
+              description: `Order #${data.order_id}`,
+            });
+            navigate(`/orders/${verifyResponse.order.id}`);
+          } else {
+            toast({
+              title: "Payment verification pending",
+              description: "Please check your order status",
+            });
+            navigate("/orders");
+          }
+        }
+      } catch (error) {
+        console.error("Payment error:", error);
+        toast({
+          title: "Payment failed",
+          description: "Please try again",
+          variant: "destructive",
+        });
+      } finally {
+        setIsProcessing(false);
+      }
     },
     onError: () => {
       toast({
-        title: "Order failed",
+        title: "Order creation failed",
         description: "Please try again",
         variant: "destructive",
       });
+      setIsProcessing(false);
     },
   });
 
@@ -106,11 +180,7 @@ export default function Checkout() {
 
   const onSubmit = async (data: CheckoutFormData) => {
     setIsProcessing(true);
-    try {
-      await placeOrderMutation.mutateAsync(data);
-    } finally {
-      setIsProcessing(false);
-    }
+    await createPaymentOrderMutation.mutateAsync(data);
   };
 
   return (
