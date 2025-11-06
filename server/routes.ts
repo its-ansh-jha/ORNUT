@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import { insertProductSchema, insertCartItemSchema, insertWishlistItemSchema, insertOrderSchema } from "@shared/schema";
 import { z } from "zod";
-import { Cashfree } from "cashfree-pg";
+import { Cashfree, CFEnvironment } from "cashfree-pg";
 
 async function verifyFirebaseToken(req: Request, res: Response, next: NextFunction) {
   try {
@@ -373,7 +373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const cashfree = new Cashfree(
-        process.env.NODE_ENV === "production" ? Cashfree.PRODUCTION : Cashfree.SANDBOX,
+        process.env.NODE_ENV === "production" ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX,
         cashfreeAppId,
         cashfreeSecretKey
       );
@@ -421,9 +421,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         order_id: orderNumber,
         order_details: order,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment order creation error:", error);
-      res.status(500).json({ error: "Failed to create payment order" });
+      console.error("Error details:", error.message, error.stack);
+      if (error.response) {
+        console.error("Cashfree API error response:", error.response);
+      }
+      res.status(500).json({ 
+        error: "Failed to create payment order",
+        details: error.message || "Unknown error"
+      });
     }
   });
 
@@ -449,7 +456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const cashfree = new Cashfree(
-        process.env.NODE_ENV === "production" ? Cashfree.PRODUCTION : Cashfree.SANDBOX,
+        process.env.NODE_ENV === "production" ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX,
         cashfreeAppId,
         cashfreeSecretKey
       );
@@ -533,7 +540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const cashfree = new Cashfree(
-        process.env.NODE_ENV === "production" ? Cashfree.PRODUCTION : Cashfree.SANDBOX,
+        process.env.NODE_ENV === "production" ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX,
         cashfreeAppId,
         cashfreeSecretKey
       );
