@@ -162,41 +162,75 @@ console.log(hash); // Copy this to ADMIN_PASSWORD_HASH env var
 ```
 
 ## Payment Integration (Cashfree)
-**Production-Ready Cashfree Integration:**
+**Production-Ready Cashfree Integration (SDK v5+):**
 
 ### Backend (`server/routes.ts`):
+Uses **cashfree-pg v5+** with proper SDK initialization:
+
+```javascript
+const cashfree = new Cashfree(
+  process.env.NODE_ENV === "production" ? Cashfree.PRODUCTION : Cashfree.SANDBOX,
+  cashfreeAppId,
+  cashfreeSecretKey
+);
+```
+
+**API Endpoints:**
 - `POST /api/payment/create-order` - Creates Cashfree payment session
   - Calculates order total with shipping
-  - Creates order in database with "pending" status
-  - Generates Cashfree order with customer details
+  - Creates order in database with "payment_pending" status
+  - Generates Cashfree order using `cashfree.PGCreateOrder(request)`
   - Returns `payment_session_id` and `order_id` to frontend
   - Sends order confirmation email via Formspree
   
 - `POST /api/payment/verify` - Verifies payment status
-  - Fetches order status from Cashfree
-  - Updates database order status to "paid" or "failed"
+  - Fetches order status using `cashfree.PGFetchOrder(orderId)`
+  - Updates database order status to "confirmed" if PAID
+  - Clears user's cart after successful payment
+  - Sends payment confirmation email
   - Returns verification result
 
 ### Frontend (`client/src/pages/checkout.tsx`):
+Uses **@cashfreepayments/cashfree-js** SDK:
+
+```javascript
+const cashfree = await load({ mode: "sandbox" }); // or "production"
+const result = await cashfree.checkout({
+  paymentSessionId: sessionId,
+  redirectTarget: "_modal"
+});
+```
+
 - Initializes Cashfree SDK with configurable mode (sandbox/production)
 - Opens Cashfree checkout modal for payment
 - Handles payment success/failure
 - Verifies payment with backend before confirmation
+- Shows loading states and user feedback
 
 ### Configuration:
 - **Sandbox Mode** (default): For testing without real transactions
-  - Set `VITE_CASHFREE_MODE=sandbox` (or leave unset)
+  - Frontend: Set `VITE_CASHFREE_MODE=sandbox` (or leave unset)
+  - Backend: Runs in SANDBOX when `NODE_ENV=development`
   - Use Cashfree test credentials
   
 - **Production Mode**: For real transactions
-  - Set `VITE_CASHFREE_MODE=production`
+  - Frontend: Set `VITE_CASHFREE_MODE=production`
+  - Backend: Set `NODE_ENV=production`
   - Set `CASHFREE_APP_ID` and `CASHFREE_SECRET_KEY` with production credentials
   - Test thoroughly before going live
 
+### Environment Variables:
+- `CASHFREE_APP_ID` - Backend API client ID (x-client-id)
+- `CASHFREE_SECRET_KEY` - Backend API secret (x-client-secret)
+- `VITE_CASHFREE_APP_ID` - Frontend SDK app ID (same as backend for consistency)
+- `VITE_CASHFREE_MODE` - Frontend SDK mode: "production" or "sandbox"
+
 ### Security:
-- Payment verification done server-side
+- Payment order creation and verification done server-side
 - Customer data validated before creating order
-- Order status updates only after successful payment verification
+- Order status updates only after successful Cashfree payment verification
+- Cart cleared only after payment confirmation
+- Email notifications sent for both order creation and payment confirmation
 
 ## Email Notifications (Formspree)
 Order confirmation emails are sent via Formspree:

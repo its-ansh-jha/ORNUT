@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import { insertProductSchema, insertCartItemSchema, insertWishlistItemSchema, insertOrderSchema } from "@shared/schema";
 import { z } from "zod";
-import Cashfree from "cashfree-pg";
+import { Cashfree } from "cashfree-pg";
 
 async function verifyFirebaseToken(req: Request, res: Response, next: NextFunction) {
   try {
@@ -372,11 +372,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Payment gateway not configured" });
       }
       
-      Cashfree.XClientId = cashfreeAppId;
-      Cashfree.XClientSecret = cashfreeSecretKey;
-      Cashfree.XEnvironment = process.env.NODE_ENV === "production" 
-        ? Cashfree.Environment.PRODUCTION 
-        : Cashfree.Environment.SANDBOX;
+      const cashfree = new Cashfree(
+        process.env.NODE_ENV === "production" ? Cashfree.PRODUCTION : Cashfree.SANDBOX,
+        cashfreeAppId,
+        cashfreeSecretKey
+      );
       
       const request = {
         order_amount: totalAmount,
@@ -393,7 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       };
       
-      const response = await Cashfree.PGCreateOrder("2023-08-01", request);
+      const response = await cashfree.PGCreateOrder(request);
       
       const orderData = {
         userId,
@@ -441,13 +441,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Payment gateway not configured" });
       }
       
-      Cashfree.XClientId = cashfreeAppId;
-      Cashfree.XClientSecret = cashfreeSecretKey;
-      Cashfree.XEnvironment = process.env.NODE_ENV === "production" 
-        ? Cashfree.Environment.PRODUCTION 
-        : Cashfree.Environment.SANDBOX;
+      const cashfree = new Cashfree(
+        process.env.NODE_ENV === "production" ? Cashfree.PRODUCTION : Cashfree.SANDBOX,
+        cashfreeAppId,
+        cashfreeSecretKey
+      );
       
-      const response = await Cashfree.PGFetchOrder("2023-08-01", orderId);
+      const response = await cashfree.PGFetchOrder(orderId);
       
       if (response.data.order_status === "PAID") {
         const order = await storage.getOrderByOrderNumber(orderId);

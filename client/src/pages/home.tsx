@@ -2,8 +2,11 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Heart, Leaf, Award, Truck, CheckCircle } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Product } from "@shared/schema";
+import { useAuth } from "@/lib/auth-context";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import heroImage from "@assets/generated_images/Hero_banner_peanut_butter_156a8621.png";
 import {
   Accordion,
@@ -170,6 +173,47 @@ export default function Home() {
 }
 
 function ProductCard({ product }: { product: Product }) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const addToCartMutation = useMutation({
+    mutationFn: () =>
+      apiRequest("POST", "/api/cart", {
+        productId: product.id,
+        quantity: 1,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+      toast({
+        title: "Added to cart",
+        description: `${product.name} has been added to your cart`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to add to cart",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to sign in to add items to cart",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addToCartMutation.mutate();
+  };
+
   return (
     <Card className="overflow-hidden hover-elevate cursor-pointer group" data-testid={`card-product-${product.id}`}>
       <Link href={`/product/${product.id}`}>
@@ -201,9 +245,14 @@ function ProductCard({ product }: { product: Product }) {
             ${Number(product.price).toFixed(2)}
           </p>
         </Link>
-        <Button className="w-full mt-4" data-testid={`button-add-to-cart-${product.id}`}>
+        <Button 
+          className="w-full mt-4" 
+          onClick={handleAddToCart}
+          disabled={addToCartMutation.isPending}
+          data-testid={`button-add-to-cart-${product.id}`}
+        >
           <ShoppingCart className="h-4 w-4 mr-2" />
-          Add to Cart
+          {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
         </Button>
       </CardContent>
     </Card>
