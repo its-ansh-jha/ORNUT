@@ -415,8 +415,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const order = await storage.createOrder(orderData, orderItems);
       
+      // SDK v5+ returns data directly without .data wrapper
       res.json({
-        payment_session_id: response.data.payment_session_id,
+        payment_session_id: response.payment_session_id,
         order_id: orderNumber,
         order_details: order,
       });
@@ -426,48 +427,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cashfree Webhook Handler with signature verification
   app.post("/api/payment/webhook", async (req, res) => {
     try {
-      const webhookData = req.body;
-      
-      // Verify webhook signature (recommended for production)
       const signature = req.headers["x-webhook-signature"] as string;
       const timestamp = req.headers["x-webhook-timestamp"] as string;
+      const rawBody = req.rawBody as Buffer;
       
-      // Process webhook based on event type
-      if (webhookData.type === "PAYMENT_SUCCESS_WEBHOOK") {
-        const orderId = webhookData.data?.order?.order_id;
-        
-        if (orderId) {
-          const order = await storage.getOrderByOrderNumber(orderId);
-          if (order && order.status !== "confirmed") {
-            await storage.updateOrderStatus(order.id, "confirmed");
-            
-            // Send confirmation email
-            try {
-              const formspreeUrl = `https://formspree.io/f/${process.env.VITE_FORMSPREE_FORM_ID}`;
-              const emailBody = {
-                subject: `Payment Confirmed: ${orderId}`,
-                message: `Payment confirmed for order ${orderId}. Amount: ${webhookData.data?.order?.order_amount} INR`,
-              };
-              
-              await fetch(formspreeUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(emailBody),
-              });
-            } catch (emailError) {
-              console.error("Email notification error:", emailError);
-            }
-          }
-        }
+      if (!signature || !timestamp) {
+        console.error("Webhook missing signature or timestamp");
+        return res.status(400).json({ error: "Missing webhook signature" });
+      }
+
+      // Verify webhook signature using Cashfree SDK
+      const cashfreeAppId = process.env.CASHFREE_APP_ID;
+      const cashfreeSecretKey = process.env.CASHFREE_SECRET_KEY;
+      
+      if (!cashfreeAppId || !cashfreeSecretKey) {
+        console.error("Cashfree credentials not configured");
+        return res.status(500).json({ error: "Payment gateway not configured" });
       }
       
-      // Always return 200 to acknowledge receipt
-      res.json({ success: true });
+      const cashfree = new Cashfree(
+        process.env.NODE_ENV === "production" ? Cashfree.PRODUCTION : Cashfree.SANDBOX,
+        cashfreeAppId,
+        cashfreeSecretKey
+      );
+
+      try {
+        // Verify signature - this will throw if verification fails
+        cashfree.PGVerifyWebhookSignature(signature, rawBody.toString(), timestamp);
+        console.log("Webhook signature verified successfully");
+      } catch (verifyError) {
+        console.error("Webhook signature verification failed:", verifyError);
+        return res.status(401).json({ error: "Invalid webhook signature" });
+      }
+
+      const webhookData = req.body;
+      console.log("Cashfree Webhook received:", JSON.stringify(webhookData, null, 2));
+
+      // Extract payment information from webhook
+      const orderId = webhookData.data?.order?.order_id;
+      const orderStatus = webhookData.data?.order?.order_status;
+      const paymentStatus = webhookData.data?.payment?.payment_status;
+
+      if (!orderId) {
+        console.error("Webhook missing order_id");
+        return res.status(400).json({ error: "Invalid webhook data" });
+      }
+
+      // Handle different webhook events
+      if (webhookData.type === "PAYMENT_SUCCESS_WEBHOOK" && orderStatus === "PAID") {
+        console.log(`Payment successful for order: ${orderId}`);
+        
+        const order = await storage.getOrderByOrderNumber(orderId);
+        if (order && order.status !== "confirmed") {
+          await storage.updateOrderStatus(order.id, "confirmed");
+          
+          // Send confirmation email
+          try {
+            const formspreeUrl = `https://formspree.io/f/${process.env.VITE_FORMSPREE_FORM_ID}`;
+            await fetch(formspreeUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                subject: `Payment Successful - Order ${orderId}`,
+                message: `Payment confirmed via webhook for order ${orderId}. Amount: ${webhookData.data?.order?.order_amount} INR`,
+              }),
+            });
+          } catch (emailError) {
+            console.error("Webhook email error:", emailError);
+          }
+        }
+      } else if (webhookData.type === "PAYMENT_FAILED_WEBHOOK") {
+        console.log(`Payment failed for order: ${orderId}`);
+        
+        const order = await storage.getOrderByOrderNumber(orderId);
+        if (order) {
+          await storage.updateOrderStatus(order.id, "failed");
+        }
+      }
+
+      // Always return 200 to acknowledge webhook receipt
+      res.status(200).json({ success: true });
     } catch (error) {
       console.error("Webhook processing error:", error);
-      res.status(200).json({ success: true }); // Still acknowledge to prevent retries
+      // Still return 200 to avoid Cashfree retrying indefinitely
+      res.status(200).json({ success: true, error: "Processing failed" });
     }
   });
 
@@ -494,7 +540,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const response = await cashfree.PGFetchOrder(orderId);
       
-      if (response.data.order_status === "PAID") {
+      // SDK v5+ returns data directly without .data wrapper
+      if (response.order_status === "PAID") {
         const order = await storage.getOrderByOrderNumber(orderId);
         if (order) {
           await storage.updateOrderStatus(order.id, "confirmed");
@@ -504,7 +551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const formspreeUrl = `https://formspree.io/f/${process.env.VITE_FORMSPREE_FORM_ID}`;
             const emailBody = {
               subject: `New Order Payment Confirmed: ${orderId}`,
-              message: `Payment confirmed for order ${orderId}. Total: ${response.data.order_amount} INR`,
+              message: `Payment confirmed for order ${orderId}. Total: ${response.order_amount} INR`,
             };
             
             await fetch(formspreeUrl, {
@@ -525,7 +572,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         return res.json({ 
           success: false, 
-          status: response.data.order_status,
+          status: response.order_status,
         });
       }
     } catch (error) {

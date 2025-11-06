@@ -190,6 +190,12 @@ const cashfree = new Cashfree(
   - Sends payment confirmation email
   - Returns verification result
 
+- `POST /api/payment/webhook` - Cashfree webhook handler
+  - Receives payment notifications from Cashfree
+  - Automatically updates order status when payments succeed/fail
+  - Sends email notifications via Formspree
+  - **Webhook URL for Cashfree Dashboard**: `https://your-domain.replit.dev/api/payment/webhook`
+
 ### Frontend (`client/src/pages/checkout.tsx`):
 Uses **@cashfreepayments/cashfree-js** SDK:
 
@@ -217,6 +223,10 @@ const result = await cashfree.checkout({
   - Frontend: Set `VITE_CASHFREE_MODE=production`
   - Backend: Set `NODE_ENV=production`
   - Set `CASHFREE_APP_ID` and `CASHFREE_SECRET_KEY` with production credentials
+  - **Configure Webhook in Cashfree Dashboard**:
+    1. Go to Cashfree Dashboard > Developers > Webhooks
+    2. Add webhook URL: `https://your-app-domain.replit.dev/api/payment/webhook`
+    3. Select events: `PAYMENT_SUCCESS_WEBHOOK`, `PAYMENT_FAILED_WEBHOOK`
   - Test thoroughly before going live
 
 ### Environment Variables:
@@ -248,11 +258,13 @@ Order confirmation emails are sent via Formspree:
 - ✅ **Branding Update**: Integrated Ornut logo, changed all text to "ORNUT" brand name
 - ✅ **Order Numbers**: Changed prefix from "PB..." to "ORNUT..." for brand consistency
 - ✅ **Navigation**: Added admin login link to navbar (desktop & mobile)
-- ✅ **Cashfree Payment Integration**: Production-ready payment system
+- ✅ **Cashfree Payment Integration**: Production-ready payment system with SDK v5+
   - Backend endpoints for order creation and payment verification
   - Frontend SDK integration with configurable sandbox/production mode
-  - Secure payment flow with server-side verification
-  - Email notifications via Formspree
+  - **Secure webhook with HMAC signature verification** using `PGVerifyWebhookSignature`
+  - Automatic order status updates via Cashfree webhooks
+  - Email notifications via Formspree for orders and payments
+  - Fixed SDK v5+ response handling (direct field access without `.data` wrapper)
 - ✅ **Design Guidelines**: Created comprehensive design_guidelines.md for Ornut theme
 - ✅ Complete ecommerce platform with all MVP features
 - ✅ Secure Firebase authentication with ID token verification
