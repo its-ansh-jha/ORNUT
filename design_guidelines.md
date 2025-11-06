@@ -1,169 +1,153 @@
-# Design Guidelines for Peanut Butter Ecommerce Website
+# Design Guidelines for Ornut Peanut Butter Ecommerce Website
 
 ## Design Approach
-**Reference-Based**: Drawing inspiration from modern ecommerce leaders (Shopify, Etsy, Amazon) with emphasis on product showcase and seamless checkout experience. The green and white color scheme (to be implemented later) aligns with natural, organic peanut butter branding.
+**Reference-Based**: Drawing inspiration from wellversed.in's modern card-based layouts with clean aesthetics, combined with premium ecommerce patterns from Shopify and artisanal brands. Emphasis on large product photography, generous whitespace, and natural warmth reflecting the playful squirrel mascot and artisanal quality.
+
+## Color System (Ornut Brand Palette)
+**Light Mode:**
+- Primary: `hsl(30 35% 44%)` - Warm rich brown #8B6F47 (like peanut butter) - Use for CTAs, links, highlights
+- Secondary: `hsl(36 48% 91%)` - Soft cream #F5E6D3 (like peanuts) - Use for accents, backgrounds
+- Background: `hsl(40 60% 98%)` - Very light cream #FAF8F5 - Main page background
+- Card: `hsl(0 0% 100%)` - Pure white - For product cards and elevated surfaces
+- Muted: `hsl(36 30% 94%)` - Light beige #F0EBE3 - For muted backgrounds
+- Border: `hsl(30 15% 85%)` - Soft brown border #D9D0C7
+- Foreground: `hsl(30 25% 25%)` - Dark brown #5D4E37 - Primary text color
+- Muted-foreground: `hsl(30 15% 50%)` - Medium brown #8A7A6A - Secondary text
+- Destructive: `hsl(0 70% 50%)` - Red for errors/delete actions
+
+**Dark Mode:**
+- Background: `hsl(30 25% 12%)` - Deep brown #2A2419
+- Card: `hsl(30 20% 18%)` - Slightly lighter brown #36301F
+- Primary: `hsl(36 48% 75%)` - Light cream (adjusted for dark bg)
+- Foreground: `hsl(40 60% 95%)` - Light cream text
+- Border: `hsl(30 15% 30%)` - Darker brown border
+
+**Accent Colors:**
+- Success: `hsl(142 70% 45%)` - Green for success states
+- Warning: `hsl(38 92% 50%)` - Amber for warnings
+- Info: `hsl(199 89% 48%)` - Blue for informational
 
 ## Typography System
-- **Primary Font**: Plus Jakarta Sans (Google Fonts) - modern, friendly, approachable
-- **Secondary Font**: Inter (Google Fonts) - clean for body text and data
-- **Hierarchy**:
-  - Hero Headlines: text-5xl to text-6xl, font-bold
-  - Section Headers: text-3xl to text-4xl, font-semibold
-  - Product Titles: text-xl, font-semibold
-  - Body Text: text-base, font-normal
-  - Labels/Meta: text-sm, font-medium
-  - Buttons: text-base, font-semibold
+**Fonts (from theme):**
+- Primary: 'Space Grotesk' - Bold, modern headlines
+- Secondary: 'Geist' - Clean body text
+- Mono: 'Geist Mono' - Technical/pricing data
 
-## Layout & Spacing System
-**Tailwind Units**: Standardize on 4, 6, 8, 12, 16, 24 for consistent rhythm
-- Section padding: py-16 md:py-24
-- Component spacing: gap-8 or gap-12
-- Card padding: p-6 or p-8
-- Container: max-w-7xl mx-auto px-4
+**Hierarchy:**
+- Hero Headlines: text-6xl md:text-7xl, font-bold
+- Section Headers: text-4xl md:text-5xl, font-semibold
+- Product Titles: text-2xl, font-semibold
+- Body Text: text-base, leading-relaxed
+- Labels/Meta: text-sm, font-medium, tracking-wide
+- Buttons: text-base, font-semibold
 
-## Page Structure & Components
+## Layout & Spacing
+**Tailwind Units**: 4, 8, 12, 16, 24, 32
+**Border Radius**: 0rem (sharp, modern from theme)
+- Section padding: py-24 md:py-32
+- Card padding: p-8 md:p-12
+- Component gaps: gap-8 md:gap-12
+- Container: max-w-7xl mx-auto px-6
+
+## Page Structures
 
 ### Homepage
-1. **Hero Section** (with large hero image)
-   - Full-width banner showcasing peanut butter jars in natural setting
-   - Prominent headline emphasizing product quality
-   - Primary CTA buttons with backdrop-blur-md background
-   - Trust indicators (delivery info, ratings)
+1. **Hero Section**: Full-width lifestyle image of peanut butter jar with peanuts and squirrel mascot subtly integrated, natural lighting. Overlay with large headline, subheadline, dual CTAs with backdrop-blur-lg, trust badges below (free shipping, 100% natural, handcrafted)
 
-2. **Featured Products Grid**
-   - 3-column grid (lg:grid-cols-3 md:grid-cols-2)
-   - Product cards with image, title, price, quick-add button
-   - Wishlist heart icon (top-right corner)
+2. **Featured Products Grid**: 3-column (lg:grid-cols-3 md:grid-cols-2), large square product images on card backgrounds, hover lift effect, prominent pricing, quick-add buttons
 
-3. **Why Choose Us**
-   - 4-column feature highlights (ingredients, process, sustainability, taste)
-   - Icon + title + description format
+3. **Brand Story**: 2-column asymmetric layout - large image of production process left, story text with squirrel mascot illustration right
 
-4. **Customer Testimonials**
-   - 3-column testimonial cards with customer photos
-   - Star ratings and purchase verification badges
+4. **Why Ornut**: 4-column icon cards (natural ingredients, small batch, no additives, sustainable), icon + bold title + description
 
-5. **FAQ Section**
-   - Accordion-style expandable questions
-   - Categories: Product, Delivery, Payment, Returns
+5. **Customer Love**: 3-column testimonial cards with photos, 5-star ratings, verified purchase badges
 
-### Product Catalog Page
-- Filter sidebar (categories, price range, dietary tags)
-- Grid view with 3-4 products per row
-- Search bar with autocomplete suggestions (Heroicons magnifying glass)
-- Sort dropdown (price, popularity, newest)
-- Product cards: hover effect showing "Quick View" and "Add to Wishlist"
+6. **Instagram Feed**: 4-column grid showcasing lifestyle shots, @handle overlay
 
-### Product Detail Page
-- 2-column layout (image gallery left, details right)
-- Image gallery with thumbnails and zoom on hover
-- Product title, price, ratings, reviews count
-- Quantity selector with + / - buttons
-- Add to Cart (primary) and Add to Wishlist (secondary outline) buttons
-- Tabs: Description, Nutritional Info, Reviews, Shipping
-- Related Products carousel at bottom
+7. **Newsletter CTA**: Centered section with mascot illustration, input field, subscribe button
 
-### Shopping Cart
-- Line items with product image, title, price, quantity controls
-- Running total with subtotal, shipping estimate, taxes
-- Promo code input field
-- Sticky "Proceed to Checkout" button
-- Continue Shopping link
-- Empty cart state with illustration and CTA
+### Product Catalog
+- Sticky filter sidebar: Categories, price range, dietary filters, nut type
+- 3-column grid with large images, wishlist icon top-right
+- Sort controls: dropdown with price/popularity/newest
+- Product cards: Image fills 60% of card height, title, price, quick-view button, add-to-cart
 
-### Wishlist Page
-- Grid layout similar to catalog
-- "Move to Cart" button on each item
-- Share wishlist functionality
+### Product Detail
+- **Layout**: 2-column split - Left: Image gallery with main + 4 thumbnails, zoom on click. Right: Breadcrumb, title, price (large, primary color), star rating + review count, short description, quantity selector (- / +), Add to Cart (primary), Add to Wishlist (outline), accordion for ingredients/nutrition/shipping
+- **Below**: Tabbed section (Reviews with photos, Recipes, FAQ), Related Products carousel
 
-### Checkout Flow
-- Multi-step progress indicator (Cart → Shipping → Payment → Confirmation)
-- Form sections with clear labels and validation
-- Address autocomplete integration
-- Cashfree payment iframe embed
-- Order summary sidebar (sticky on desktop)
+### Cart & Checkout
+- **Cart**: Line items with thumbnail, title, quantity controls, remove icon, subtotal, promo input, shipping calculator, sticky checkout button
+- **Checkout**: Multi-step progress bar, form sections with validation, order summary sidebar (sticky desktop), Cashfree payment integration, guest checkout option
 
-### Order Tracking Page
-- Order number search input
-- Timeline visualization with status updates:
-  - Order Placed → Processing → Shipped → In Transit → Out for Delivery → Delivered
-- Estimated delivery date
-- Live location updates display
-- Contact support button
-
-### User Account Dashboard
-- Sidebar navigation: Orders, Wishlist, Addresses, Profile
-- Order history table with status badges
-- Saved addresses with edit/delete actions
-- Profile settings form
+### Account Dashboard
+- Sidebar navigation: Orders, Wishlist, Addresses, Profile, Subscription (if recurring orders)
+- Order history: Cards with product thumbnails, status badges, tracking links
+- Wishlist: Grid matching catalog style
 
 ### Admin Panel
-- Login page with password field (32-64 character requirement messaging)
-- Dashboard with metrics cards (orders today, revenue, pending deliveries)
-- Product management table with add/edit/delete actions
-- Order management: filterable table with customer details, delivery status dropdown
-- Rich text editor for product descriptions
-- Image upload with preview for product photos
+- **Login**: Centered card with mascot logo, email/password (32-64 char requirement), remember me
+- **Dashboard**: Metric cards (4-column: today's orders, revenue, pending, inventory alerts), recent orders table, quick actions
+- **Product Management**: Table with image preview, edit/delete icons, add product form with image upload, rich text editor for descriptions
+- **Orders**: Filterable table, status dropdown, customer details, delivery tracking integration
 
 ## Component Library
 
 ### Navigation
-- Sticky header with logo, search bar, account/cart icons
-- Mega menu for product categories on hover
-- Mobile: hamburger menu with slide-out drawer
-- Cart icon with item count badge
-- Wishlist icon with count
+Sticky header: Logo left, centered search bar with icon, right section (wishlist icon + count, account icon, cart icon + count + badge). Mega menu on category hover showing product images. Mobile: hamburger → slide-out with mascot at top.
 
 ### Buttons
-- Primary: Rounded corners (rounded-lg), medium padding (px-6 py-3)
-- Secondary: Outline style with border
-- Icon buttons: Square with padding-3, rounded-full for circular
-- Backdrop blur on buttons over images
+- Primary: px-8 py-4, rounded-none (theme), font-semibold, primary background
+- Secondary: Outline with border-2, secondary foreground
+- Ghost: No background, hover with muted background
+- Icon buttons: p-3, square, icon-only
+- Backdrop-blur buttons (hero/images): backdrop-blur-lg with semi-transparent backgrounds
 
 ### Cards
-- Product cards: rounded-xl, shadow-sm on hover
-- Testimonial cards: rounded-lg with subtle border
-- Admin dashboard cards: rounded-lg with header divider
+All cards: rounded-none (theme), shadow-sm on hover becoming shadow-md, card background from theme
+- Product cards: Image-dominant, minimal padding, clean separation
+- Feature cards: Icon top, centered text, equal height
+- Testimonial cards: Customer photo, quote, name, rating stars
 
 ### Forms
-- Input fields: rounded-lg, border with focus ring
-- Labels: text-sm font-medium, positioned above inputs
-- Validation: inline error messages in red, success states with checkmark
-- Search bar: rounded-full with icon prefix
+- Inputs: rounded-none, border-2, focus ring in primary
+- Labels: text-sm font-medium, mb-2
+- Validation: Inline messages, checkmark for success
+- Search: Border-2 with search icon prefix
 
 ### Icons
-**Heroicons** (outline style for general UI, solid for emphasis):
-- Shopping cart, heart (wishlist), magnifying glass (search)
-- User, truck (delivery), check-circle (success)
-- Chevrons for navigation, x-mark for close
+**Heroicons outline**: shopping-cart, heart, magnifying-glass, user, truck, check-circle, chevron-right/down, x-mark, star (solid for ratings)
 
 ### Data Display
-- Order tables: striped rows, sticky header
-- Status badges: rounded-full pills with dot indicator
-- Progress indicators: stepped timeline with connecting lines
+- Tables: Minimal borders, hover row highlight
+- Status badges: Rounded-full, px-3 py-1, dot indicator
+- Progress: Stepped with connecting lines
 
 ### Overlays
-- Modals: centered with backdrop, rounded-xl, max-w-lg
-- Toast notifications: top-right corner, auto-dismiss
-- Image lightbox for product gallery zoom
+- Modals: Centered, max-w-2xl, backdrop with blur
+- Toasts: Top-right, slide-in animation
+- Quick View: Modal with product image + key details
 
-## Images
-1. **Hero Image**: Wide shot of peanut butter jars arranged with fresh peanuts, wooden surface, natural lighting - conveys artisanal quality
-2. **Product Images**: Clean white background shots, consistent aspect ratio (square), high-resolution for zoom
-3. **Lifestyle Images**: Peanut butter in use (on toast, in smoothies), creates emotional connection
-4. **Customer Testimonial Photos**: Authentic user photos increase trust
-5. **About/Process Images**: Behind-the-scenes production, ingredient sourcing
+## Images Strategy
+1. **Hero**: Wide lifestyle shot - jar on rustic wood with scattered peanuts, warm natural lighting, subtle squirrel mascot cameo (1920x800px)
+2. **Products**: Square format (1:1), white background, professional lighting, consistent styling (800x800px)
+3. **Lifestyle**: In-use shots (toast, smoothies, baking), authentic, warm tones (1200x800px)
+4. **Process**: Behind-scenes production, ingredient sourcing, batch making (1000x667px)
+5. **Testimonials**: Real customer photos (200x200px circle crops)
+6. **Mascot**: Playful squirrel illustrations for empty states, section breaks, loading states
 
 ## Animations
-Minimal and purposeful only:
-- Smooth page transitions
-- Cart item add: brief scale animation
-- Hover states: subtle elevation on cards
-- Loading states: skeleton screens for product grids
+Purposeful only:
+- Card hover: Subtle lift (transform translateY)
+- Add to cart: Brief scale + check animation
+- Page transitions: Fade
+- Image galleries: Smooth carousel
+- Skeleton loaders: Shimmer effect for product grids
 
-## Mobile Responsiveness
-- Stack all columns to single column on mobile
-- Bottom navigation bar for cart/account/wishlist on mobile
-- Collapsible filters on catalog page
-- Touch-friendly buttons (min height 44px)
-- Swipeable product image galleries
+## Mobile Optimization
+- Single column stacking
+- Bottom nav: Home, Categories, Cart, Account
+- Collapsible filters with slide-up drawer
+- Touch targets minimum 48px
+- Swipeable galleries and carousels
+- Sticky add-to-cart bar on product pages
