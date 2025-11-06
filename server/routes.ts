@@ -426,6 +426,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/payment/webhook", async (req, res) => {
+    try {
+      const webhookData = req.body;
+      
+      // Verify webhook signature (recommended for production)
+      const signature = req.headers["x-webhook-signature"] as string;
+      const timestamp = req.headers["x-webhook-timestamp"] as string;
+      
+      // Process webhook based on event type
+      if (webhookData.type === "PAYMENT_SUCCESS_WEBHOOK") {
+        const orderId = webhookData.data?.order?.order_id;
+        
+        if (orderId) {
+          const order = await storage.getOrderByOrderNumber(orderId);
+          if (order && order.status !== "confirmed") {
+            await storage.updateOrderStatus(order.id, "confirmed");
+            
+            // Send confirmation email
+            try {
+              const formspreeUrl = `https://formspree.io/f/${process.env.VITE_FORMSPREE_FORM_ID}`;
+              const emailBody = {
+                subject: `Payment Confirmed: ${orderId}`,
+                message: `Payment confirmed for order ${orderId}. Amount: ${webhookData.data?.order?.order_amount} INR`,
+              };
+              
+              await fetch(formspreeUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(emailBody),
+              });
+            } catch (emailError) {
+              console.error("Email notification error:", emailError);
+            }
+          }
+        }
+      }
+      
+      // Always return 200 to acknowledge receipt
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Webhook processing error:", error);
+      res.status(200).json({ success: true }); // Still acknowledge to prevent retries
+    }
+  });
+
   app.post("/api/payment/verify", verifyFirebaseToken, async (req, res) => {
     try {
       const { orderId } = req.body;
