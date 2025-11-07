@@ -321,7 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (sum, item) => sum + Number(item.product.price) * item.quantity,
         0
       );
-      const shipping = subtotal >= 50 ? 0 : 9.99;
+      const shipping = subtotal >= 1200 ? 0 : 40;
       const totalAmount = subtotal + shipping;
       
       const orderNumber = `PB${Date.now().toString().slice(-8)}`;
@@ -472,7 +472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (sum, item) => sum + Number(item.product.price) * item.quantity,
         0
       );
-      const shipping = subtotal >= 50 ? 0 : 9.99;
+      const shipping = subtotal >= 1200 ? 0 : 40;
       const totalAmount = subtotal + shipping;
       
       const orderNumber = `ORNUT${Date.now().toString().slice(-8)}`;

@@ -66,7 +66,7 @@ export default function Cart() {
     (sum, item) => sum + Number(item.product.price) * item.quantity,
     0
   );
-  const shipping = subtotal >= 50 ? 0 : 9.99;
+  const shipping = subtotal >= 1200 ? 0 : 40;
   const total = subtotal + shipping;
 
   if (cartItems.length === 0) {
@@ -176,9 +176,9 @@ export default function Cart() {
                     {shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}
                   </span>
                 </div>
-                {subtotal < 50 && (
+                {subtotal < 1200 && (
                   <p className="text-xs text-muted-foreground">
-                    Add ₹{(50 - subtotal).toFixed(2)} more for free shipping
+                    Add ₹{(1200 - subtotal).toFixed(2)} more for free shipping
                   </p>
                 )}
               </div>

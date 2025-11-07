@@ -174,7 +174,7 @@ export default function Checkout() {
     (sum, item) => sum + Number(item.product.price) * item.quantity,
     0
   );
-  const shipping = subtotal >= 50 ? 0 : 9.99;
+  const shipping = subtotal >= 1200 ? 0 : 40;
   const total = subtotal + shipping;
 
   const onSubmit = async (data: CheckoutFormData) => {
