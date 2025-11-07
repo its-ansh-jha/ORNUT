@@ -64,15 +64,6 @@ export default function TrackOrder() {
     enabled: !!user,
   });
 
-  // Get return information for the current order
-  const currentOrderReturn = existingReturns.find((r: any) => r.orderId === displayOrder?.id);
-  
-  // Fetch return tracking if return exists
-  const { data: returnTracking = [] } = useQuery<any[]>({
-    queryKey: ["/api/returns", currentOrderReturn?.id, "tracking"],
-    enabled: !!currentOrderReturn?.id,
-  });
-
   const returnMutation = useMutation({
     mutationFn: async (reason: string) => {
       const orderToReturn = order || publicTrackingData?.order;
@@ -124,6 +115,15 @@ export default function TrackOrder() {
   const displayOrder = order || publicTrackingData?.order;
   const displayTracking = tracking.length > 0 ? tracking : (publicTrackingData?.tracking || []);
   const isLoading = isLoadingOrder || isLoadingTracking || isLoadingPublicTracking;
+
+  // Get return information for the current order (must be after displayOrder is defined)
+  const currentOrderReturn = existingReturns.find((r: any) => r.orderId === displayOrder?.id);
+  
+  // Fetch return tracking if return exists
+  const { data: returnTracking = [] } = useQuery<any[]>({
+    queryKey: ["/api/returns", currentOrderReturn?.id, "tracking"],
+    enabled: !!currentOrderReturn?.id,
+  });
 
   // Show search form if accessed from /track-order route
   if (!orderId && !searchedOrderNumber) {
