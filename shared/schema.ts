@@ -79,11 +79,24 @@ export const deliveryTracking = pgTable("delivery_tracking", {
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
+// Returns table
+export const returns = pgTable("returns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().default("pending"),
+  requestedAt: timestamp("requested_at").defaultNow().notNull(),
+  adminResponse: text("admin_response"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   cartItems: many(cartItems),
   wishlistItems: many(wishlistItems),
   orders: many(orders),
+  returns: many(returns),
 }));
 
 export const productsRelations = relations(products, ({ many }) => ({
@@ -121,6 +134,7 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   }),
   orderItems: many(orderItems),
   deliveryTracking: many(deliveryTracking),
+  returns: many(returns),
 }));
 
 export const orderItemsRelations = relations(orderItems, ({ one }) => ({
@@ -141,6 +155,17 @@ export const deliveryTrackingRelations = relations(deliveryTracking, ({ one }) =
   }),
 }));
 
+export const returnsRelations = relations(returns, ({ one }) => ({
+  order: one(orders, {
+    fields: [returns.orderId],
+    references: [orders.id],
+  }),
+  user: one(users, {
+    fields: [returns.userId],
+    references: [users.id],
+  }),
+}));
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ createdAt: true });
 export const insertProductSchema = createInsertSchema(products).omit({ id: true, createdAt: true });
@@ -149,6 +174,7 @@ export const insertWishlistItemSchema = createInsertSchema(wishlistItems).omit({
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true, orderId: true });
 export const insertDeliveryTrackingSchema = createInsertSchema(deliveryTracking).omit({ id: true, timestamp: true });
+export const insertReturnSchema = createInsertSchema(returns).omit({ id: true, requestedAt: true, updatedAt: true });
 
 // TypeScript types
 export type User = typeof users.$inferSelect;
@@ -171,3 +197,6 @@ export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
 
 export type DeliveryTracking = typeof deliveryTracking.$inferSelect;
 export type InsertDeliveryTracking = z.infer<typeof insertDeliveryTrackingSchema>;
+
+export type Return = typeof returns.$inferSelect;
+export type InsertReturn = z.infer<typeof insertReturnSchema>;
