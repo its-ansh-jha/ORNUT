@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ export default function TrackOrder() {
   const orderId = params?.id;
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   
   const [orderNumber, setOrderNumber] = useState("");
   const [searchedOrderNumber, setSearchedOrderNumber] = useState("");
@@ -190,6 +191,7 @@ export default function TrackOrder() {
   const deliveryDate = deliveredTracking ? new Date(deliveredTracking.timestamp) : null;
   const daysElapsed = deliveryDate ? differenceInDays(new Date(), deliveryDate) : null;
   const canRequestReturn = user && displayOrder.deliveryStatus === "delivered" && daysElapsed !== null && daysElapsed <= 5;
+  const isPublicTracking = !user && searchedOrderNumber;
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -352,6 +354,34 @@ export default function TrackOrder() {
                 >
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Request Return
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {isPublicTracking && displayOrder.deliveryStatus === "delivered" && daysElapsed !== null && daysElapsed <= 5 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Return Options</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Delivered {daysElapsed} {daysElapsed === 1 ? 'day' : 'days'} ago. 
+                    You have {5 - (daysElapsed || 0)} {(5 - (daysElapsed || 0)) === 1 ? 'day' : 'days'} left to request a return.
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Please sign in to request a return for this order.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/")}
+                  data-testid="button-sign-in-to-return"
+                >
+                  Sign In to Return
                 </Button>
               </div>
             </CardContent>
