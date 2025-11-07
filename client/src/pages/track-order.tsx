@@ -64,6 +64,15 @@ export default function TrackOrder() {
     enabled: !!user,
   });
 
+  // Get return information for the current order
+  const currentOrderReturn = existingReturns.find((r: any) => r.orderId === displayOrder?.id);
+  
+  // Fetch return tracking if return exists
+  const { data: returnTracking = [] } = useQuery<any[]>({
+    queryKey: ["/api/returns", currentOrderReturn?.id, "tracking"],
+    enabled: !!currentOrderReturn?.id,
+  });
+
   const returnMutation = useMutation({
     mutationFn: async (reason: string) => {
       const orderToReturn = order || publicTrackingData?.order;
@@ -343,6 +352,107 @@ export default function TrackOrder() {
             </CardContent>
           </Card>
         </div>
+
+        {currentOrderReturn && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Return Tracking</CardTitle>
+                <Badge variant={currentOrderReturn.status === "approved" ? "default" : currentOrderReturn.status === "rejected" ? "destructive" : "secondary"}>
+                  {currentOrderReturn.status === "approved" ? "Approved" : currentOrderReturn.status === "rejected" ? "Rejected" : "Pending"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold mb-1">Return Reason</p>
+                  <p className="text-sm text-muted-foreground">{currentOrderReturn.reason}</p>
+                </div>
+                {currentOrderReturn.adminResponse && (
+                  <div className="pt-3 border-t">
+                    <p className="text-sm font-semibold mb-1">Admin Response</p>
+                    <p className="text-sm text-muted-foreground">{currentOrderReturn.adminResponse}</p>
+                  </div>
+                )}
+                {currentOrderReturn.status === "approved" && currentOrderReturn.returnStatus && (
+                  <div className="pt-3 border-t">
+                    <p className="text-sm font-semibold mb-3">Return Status Timeline</p>
+                    <div className="relative">
+                      {[
+                        { key: "requested", label: "Requested" },
+                        { key: "approved", label: "Approved" },
+                        { key: "pickup_scheduled", label: "Pickup Scheduled" },
+                        { key: "picked_up", label: "Picked Up" },
+                        { key: "in_transit", label: "In Transit" },
+                        { key: "received_at_warehouse", label: "Received at Warehouse" },
+                        { key: "inspecting", label: "Inspecting" },
+                        { key: "refund_processing", label: "Refund Processing" },
+                        { key: "completed", label: "Completed" },
+                      ].map((status, index, arr) => {
+                        const statusIndex = arr.findIndex((s) => s.key === currentOrderReturn.returnStatus);
+                        const isCompleted = index <= statusIndex;
+                        const isCurrent = index === statusIndex;
+
+                        return (
+                          <div key={status.key} className="flex gap-4 pb-6 last:pb-0">
+                            <div className="flex flex-col items-center">
+                              <div
+                                className={`rounded-full p-1.5 ${
+                                  isCompleted
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted text-muted-foreground"
+                                }`}
+                              >
+                                {isCompleted ? (
+                                  <CheckCircle2 className="h-4 w-4" />
+                                ) : (
+                                  <Circle className="h-4 w-4" />
+                                )}
+                              </div>
+                              {index < arr.length - 1 && (
+                                <div
+                                  className={`w-0.5 h-12 ${
+                                    isCompleted ? "bg-primary" : "bg-muted"
+                                  }`}
+                                />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p
+                                  className={`text-sm font-medium ${
+                                    isCurrent ? "text-primary" : ""
+                                  }`}
+                                >
+                                  {status.label}
+                                </p>
+                                {isCurrent && <Badge variant="outline" className="text-xs">Current</Badge>}
+                              </div>
+                              {returnTracking
+                                .filter((t: any) => t.status === status.key)
+                                .map((t: any, idx: number) => (
+                                  <div key={idx} className="text-xs text-muted-foreground mt-1">
+                                    <p>{t.message}</p>
+                                    {t.location && (
+                                      <p className="text-xs">📍 {t.location}</p>
+                                    )}
+                                    <p className="text-xs">
+                                      {format(new Date(t.timestamp), "PPp")}
+                                    </p>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {canRequestReturn && (
           <Card>
