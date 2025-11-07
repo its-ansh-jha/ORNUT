@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,20 +62,17 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1">
-        <div className="container mx-auto px-4 py-12 max-w-6xl">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4" data-testid="text-page-title">
-              Contact Us
-            </h1>
-            <p className="text-muted-foreground text-lg" data-testid="text-page-description">
-              Have questions? We'd love to hear from you.
-            </p>
-          </div>
+    <div className="container mx-auto px-4 py-12 max-w-6xl">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4" data-testid="text-page-title">
+          Contact Us
+        </h1>
+        <p className="text-muted-foreground text-lg" data-testid="text-page-description">
+          Have questions? We'd love to hear from you.
+        </p>
+      </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 gap-8">
             <Card data-testid="card-contact-form">
               <CardHeader>
                 <CardTitle>Send us a Message</CardTitle>
@@ -196,10 +191,7 @@ export default function Contact() {
                 </CardContent>
               </Card>
             </div>
-          </div>
-        </div>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 }
