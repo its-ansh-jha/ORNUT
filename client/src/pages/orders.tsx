@@ -87,7 +87,7 @@ export default function Orders() {
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <p className="text-2xl font-bold text-primary" data-testid={`text-order-total-${order.id}`}>
-                    ${Number(order.totalAmount).toFixed(2)}
+                    ₹{Number(order.totalAmount).toFixed(2)}
                   </p>
                   <Link href={`/orders/${order.id}`}>
                     <Button variant="outline" size="sm" data-testid={`button-view-details-${order.id}`}>

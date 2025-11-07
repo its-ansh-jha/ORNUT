@@ -151,7 +151,7 @@ export default function Cart() {
                         </Button>
                       </div>
                       <p className="text-lg font-bold" data-testid={`text-item-total-${item.id}`}>
-                        ${(Number(item.product.price) * item.quantity).toFixed(2)}
+                        ₹{(Number(item.product.price) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -168,23 +168,23 @@ export default function Cart() {
               <div className="space-y-2 pt-4 border-t">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span data-testid="text-subtotal">${subtotal.toFixed(2)}</span>
+                  <span data-testid="text-subtotal">₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
                   <span data-testid="text-shipping">
-                    {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
+                    {shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}
                   </span>
                 </div>
                 {subtotal < 50 && (
                   <p className="text-xs text-muted-foreground">
-                    Add ${(50 - subtotal).toFixed(2)} more for free shipping
+                    Add ₹{(50 - subtotal).toFixed(2)} more for free shipping
                   </p>
                 )}
               </div>
               <div className="flex justify-between pt-4 border-t text-lg font-bold">
                 <span>Total</span>
-                <span data-testid="text-total">${total.toFixed(2)}</span>
+                <span data-testid="text-total">₹{total.toFixed(2)}</span>
               </div>
               <Link href="/checkout">
                 <Button className="w-full" size="lg" data-testid="button-checkout">

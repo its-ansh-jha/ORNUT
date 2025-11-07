@@ -330,7 +330,7 @@ export default function Checkout() {
                       <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                     </div>
                     <p className="font-semibold text-sm">
-                      ${(Number(item.product.price) * item.quantity).toFixed(2)}
+                      ₹{(Number(item.product.price) * item.quantity).toFixed(2)}
                     </p>
                   </div>
                 ))}
@@ -339,19 +339,19 @@ export default function Checkout() {
               <div className="space-y-2 pt-4 border-t">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span data-testid="text-checkout-subtotal">${subtotal.toFixed(2)}</span>
+                  <span data-testid="text-checkout-subtotal">₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
                   <span data-testid="text-checkout-shipping">
-                    {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
+                    {shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}
                   </span>
                 </div>
               </div>
 
               <div className="flex justify-between pt-4 border-t text-lg font-bold">
                 <span>Total</span>
-                <span data-testid="text-checkout-total">${total.toFixed(2)}</span>
+                <span data-testid="text-checkout-total">₹{total.toFixed(2)}</span>
               </div>
             </CardContent>
           </Card>

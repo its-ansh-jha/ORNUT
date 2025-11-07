@@ -121,7 +121,7 @@ function DashboardStats() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold" data-testid="text-revenue">
-            ${Number(stats?.revenue || 0).toFixed(2)}
+            ₹{Number(stats?.revenue || 0).toFixed(2)}
           </div>
         </CardContent>
       </Card>
@@ -440,7 +440,9 @@ function OrdersManagement() {
                   </div>
                 </TableCell>
                 <TableCell>{format(new Date(order.createdAt), "PP")}</TableCell>
-                <TableCell>${Number(order.totalAmount).toFixed(2)}</TableCell>
+                <TableCell>
+                    ₹{Number(order.totalAmount).toFixed(2)}
+                  </TableCell>
                 <TableCell>
                   <Badge variant="secondary" className="capitalize">
                     {order.deliveryStatus?.replace(/_/g, " ")}

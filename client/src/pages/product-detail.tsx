@@ -129,7 +129,7 @@ export default function ProductDetail() {
             {product.category}
           </p>
           <p className="text-4xl font-bold text-primary mb-6" data-testid="text-product-price">
-            ${Number(product.price).toFixed(2)}
+            ₹{Number(product.price).toFixed(2)}
           </p>
 
           <div className="flex items-center gap-4 mb-6">
@@ -206,8 +206,8 @@ export default function ProductDetail() {
             </TabsContent>
             <TabsContent value="shipping" className="mt-4">
               <p className="text-muted-foreground">
-                Free standard shipping on orders over $50. Standard delivery takes 3-5 business days.
-                Express shipping available for $9.99 (1-2 business days).
+                Free standard shipping on orders over ₹50. Standard delivery takes 3-5 business days.
+                Express shipping available for ₹9.99 (1-2 business days).
               </p>
             </TabsContent>
           </Tabs>
@@ -231,7 +231,7 @@ export default function ProductDetail() {
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-lg mb-2">{relatedProduct.name}</h3>
                     <p className="text-xl font-bold text-primary">
-                      ${Number(relatedProduct.price).toFixed(2)}
+                      ₹{Number(relatedProduct.price).toFixed(2)}
                     </p>
                   </CardContent>
                 </Link>

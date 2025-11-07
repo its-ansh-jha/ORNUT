@@ -244,7 +244,7 @@ export default function Products() {
                           {product.category}
                         </p>
                         <p className="text-2xl font-bold text-primary mb-4" data-testid={`text-product-price-${product.id}`}>
-                          ${Number(product.price).toFixed(2)}
+                          ₹{Number(product.price).toFixed(2)}
                         </p>
                       </Link>
                       <Button

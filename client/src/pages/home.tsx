@@ -55,7 +55,7 @@ export default function Home() {
           <div className="mt-8 flex flex-wrap gap-6 justify-center text-sm">
             <div className="flex items-center gap-2">
               <Truck className="h-5 w-5" />
-              <span>Free shipping over $50</span>
+              <span>Free shipping over ₹50</span>
             </div>
             <div className="flex items-center gap-2">
               <Award className="h-5 w-5" />
