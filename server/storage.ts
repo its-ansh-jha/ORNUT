@@ -10,6 +10,7 @@ import {
   deliveryTracking,
   returns,
   returnTracking,
+  coupons,
   type User,
   type InsertUser,
   type Product,
@@ -28,6 +29,8 @@ import {
   type InsertReturn,
   type ReturnTracking,
   type InsertReturnTracking,
+  type Coupon,
+  type InsertCoupon,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -69,6 +72,14 @@ export interface IStorage {
   updateReturnStatus(returnId: string, returnStatus: string): Promise<void>;
   addReturnTracking(tracking: InsertReturnTracking): Promise<ReturnTracking>;
   getReturnTracking(returnId: string): Promise<ReturnTracking[]>;
+  
+  getCoupons(): Promise<Coupon[]>;
+  getCoupon(id: string): Promise<Coupon | undefined>;
+  getCouponByCode(code: string): Promise<Coupon | undefined>;
+  createCoupon(coupon: InsertCoupon): Promise<Coupon>;
+  updateCoupon(id: string, data: Partial<InsertCoupon>): Promise<Coupon | undefined>;
+  deleteCoupon(id: string): Promise<void>;
+  incrementCouponUsage(id: string): Promise<void>;
   
   getStats(): Promise<any>;
 }
@@ -329,6 +340,52 @@ export class DatabaseStorage implements IStorage {
       .where(eq(returnTracking.returnId, returnId))
       .orderBy(returnTracking.timestamp);
     return tracking;
+  }
+
+  async getCoupons(): Promise<Coupon[]> {
+    const allCoupons = await db
+      .select()
+      .from(coupons)
+      .orderBy(desc(coupons.createdAt));
+    return allCoupons;
+  }
+
+  async getCoupon(id: string): Promise<Coupon | undefined> {
+    const [coupon] = await db.select().from(coupons).where(eq(coupons.id, id));
+    return coupon || undefined;
+  }
+
+  async getCouponByCode(code: string): Promise<Coupon | undefined> {
+    const [coupon] = await db.select().from(coupons).where(eq(coupons.code, code));
+    return coupon || undefined;
+  }
+
+  async createCoupon(coupon: InsertCoupon): Promise<Coupon> {
+    const [newCoupon] = await db.insert(coupons).values(coupon).returning();
+    return newCoupon;
+  }
+
+  async updateCoupon(id: string, data: Partial<InsertCoupon>): Promise<Coupon | undefined> {
+    const [updatedCoupon] = await db
+      .update(coupons)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(coupons.id, id))
+      .returning();
+    return updatedCoupon || undefined;
+  }
+
+  async deleteCoupon(id: string): Promise<void> {
+    await db.delete(coupons).where(eq(coupons.id, id));
+  }
+
+  async incrementCouponUsage(id: string): Promise<void> {
+    const [coupon] = await db.select().from(coupons).where(eq(coupons.id, id));
+    if (coupon) {
+      await db
+        .update(coupons)
+        .set({ usedCount: coupon.usedCount + 1, updatedAt: new Date() })
+        .where(eq(coupons.id, id));
+    }
   }
 
   async getStats(): Promise<any> {
