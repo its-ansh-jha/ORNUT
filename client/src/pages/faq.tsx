@@ -11,16 +11,12 @@ export default function FAQ() {
       category: "Products",
       questions: [
         {
-          q: "What ingredients are in your peanut butter?",
-          a: "Our classic peanut butter contains only fresh roasted peanuts and a pinch of sea salt. Our specialty flavors include natural ingredients like honey, cocoa powder, or cinnamon. We never use artificial preservatives, colors, or flavors.",
-        },
-        {
           q: "Is your peanut butter organic?",
           a: "Yes! All our peanut butter varieties are made with certified organic peanuts sourced from sustainable farms. We're committed to using only the highest quality, natural ingredients.",
         },
         {
           q: "How long does peanut butter last?",
-          a: "Unopened jars can be stored for up to 12 months in a cool, dry place. Once opened, we recommend consuming within 3 months for best quality. Refrigeration is optional but can extend shelf life.",
+          a: "Unopened jars can be stored for up to 5 months in a cool, dry place. Once opened, we recommend consuming within 3 months for best quality. Refrigeration is optional but can extend shelf life.",
         },
         {
           q: "Why does oil separate in natural peanut butter?",
@@ -32,20 +28,20 @@ export default function FAQ() {
       category: "Shipping & Delivery",
       questions: [
         {
-          q: "What are your shipping options?",
-          a: "We offer free standard shipping on orders over $50, which takes 3-5 business days. Express shipping is available for $9.99 and takes 1-2 business days. All orders are shipped Monday through Friday.",
+          q: "What are your shipping rate?",
+          a: "We offer shipping for 40 rupees In INR.",
         },
         {
           q: "How can I track my order?",
-          a: "Once your order ships, you'll receive a tracking number via email. You can also track your order status by logging into your account and viewing your order history.",
+          a: "Once your order ships, You can track your order status by logging into your account and viewing your order history.",
         },
         {
           q: "Do you ship internationally?",
-          a: "Currently, we only ship within the United States. We're working on expanding to international shipping soon!",
+          a: "Currently, we only ship within the India. We're working on expanding to international shipping soon!",
         },
         {
           q: "What if my order arrives damaged?",
-          a: "We pack all orders carefully, but if your jar arrives damaged, please contact us within 48 hours with photos. We'll send a replacement right away at no charge.",
+          a: "We pack all orders carefully, but if your jar arrives damaged, please contact us within 48 hours with photos. We'll help to resolve with your problem.",
         },
       ],
     },
@@ -54,15 +50,15 @@ export default function FAQ() {
       questions: [
         {
           q: "What payment methods do you accept?",
-          a: "We accept all major credit cards (Visa, MasterCard, American Express, Discover) through our secure Cashfree payment gateway. Your payment information is encrypted and secure.",
+          a: "We accept UPI and NetBanking alongwith all major debit cards and credit cards (Visa, MasterCard, American Express, Discover) through our secure Cashfree payment gateway. Your payment information is encrypted and secure.",
         },
         {
           q: "Is my payment information secure?",
-          a: "Absolutely! We use industry-standard encryption and secure payment processing through Cashfree. We never store your complete credit card information on our servers.",
+          a: "Absolutely! We use industry-standard encryption and secure payment processing through Cashfree. We never store your complete payment method information on our servers it is always stored to cashfree if you opt for that.",
         },
         {
           q: "What is your return policy?",
-          a: "We offer a 30-day satisfaction guarantee. If you're not completely happy with your purchase, contact us for a full refund or exchange. We want you to love our peanut butter!",
+          a: "We offer a 5-day satisfaction guarantee. If you're not completely happy with your purchase, contact us for a full refund or exchange. We want you to love our peanut butter!",
         },
         {
           q: "How long does it take to receive a refund?",
@@ -125,7 +121,7 @@ export default function FAQ() {
       <div className="mt-16 text-center p-8 bg-muted/30 rounded-lg">
         <h3 className="text-xl font-semibold mb-2">Still have questions?</h3>
         <p className="text-muted-foreground">
-          Contact us at support@peanutbutter.com or call 1-800-PEANUTS
+          Contact us at support@peanutbutter.in
         </p>
       </div>
     </div>

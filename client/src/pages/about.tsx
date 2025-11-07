@@ -10,7 +10,7 @@ export default function About() {
             Our Story
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Crafting the finest artisanal peanut butter since 2020. Every jar is made with love,
+            Crafting the finest artisanal peanut butter from 2025. Every jar is made with love,
             fresh roasted peanuts, and a commitment to quality that you can taste.
           </p>
         </div>
@@ -81,7 +81,7 @@ export default function About() {
             <ProcessStep
               number="04"
               title="Package"
-              description="Hand-packed in eco-friendly glass jars and shipped fresh to you"
+              description="Hand-packed in eco-friendly jars and shipped fresh to you"
             />
           </div>
         </div>

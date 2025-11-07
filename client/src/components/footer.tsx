@@ -7,9 +7,9 @@ export function Footer() {
       <div className="container mx-auto max-w-7xl px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="font-semibold text-lg mb-4">Peanut Butter Co.</h3>
+            <h3 className="font-semibold text-lg mb-4">Ornut</h3>
             <p className="text-sm text-muted-foreground">
-              Premium artisanal peanut butter made with love and fresh roasted peanuts.
+              A premium artisanal peanut butter company.
             </p>
           </div>
           <div>
@@ -78,7 +78,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Peanut Butter Co. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Ornut All rights reserved.</p>
         </div>
       </div>
     </footer>

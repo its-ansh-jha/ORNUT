@@ -55,7 +55,7 @@ export default function Home() {
           <div className="mt-8 flex flex-wrap gap-6 justify-center text-sm">
             <div className="flex items-center gap-2">
               <Truck className="h-5 w-5" />
-              <span>Free shipping over ₹50</span>
+              <span>Free shipping over ₹1200</span>
             </div>
             <div className="flex items-center gap-2">
               <Award className="h-5 w-5" />
@@ -139,19 +139,10 @@ export default function Home() {
           <AccordionItem value="item-1">
             <AccordionTrigger data-testid="faq-shipping">What are your shipping options?</AccordionTrigger>
             <AccordionContent>
-              We offer free standard shipping on orders over $50. Standard shipping takes 3-5 business days.
-              Express shipping is available for $9.99 and takes 1-2 business days.
+              We offer free standard shipping on orders over INR1200. Standard shipping takes 3-5 business days.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-2">
-            <AccordionTrigger data-testid="faq-ingredients">What ingredients do you use?</AccordionTrigger>
-            <AccordionContent>
-              Our peanut butter contains only fresh roasted peanuts and a pinch of salt. Our specialty
-              flavors may include natural honey, cocoa, or other natural ingredients. We never use
-              artificial preservatives, colors, or flavors.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-3">
             <AccordionTrigger data-testid="faq-storage">How should I store the peanut butter?</AccordionTrigger>
             <AccordionContent>
               Store in a cool, dry place. After opening, refrigeration is optional but will extend shelf
@@ -162,7 +153,7 @@ export default function Home() {
           <AccordionItem value="item-4">
             <AccordionTrigger data-testid="faq-returns">What is your return policy?</AccordionTrigger>
             <AccordionContent>
-              We offer a 30-day satisfaction guarantee. If you're not completely happy with your purchase,
+              We offer a 5-day satisfaction guarantee. If you're not completely happy with your purchase,
               contact us for a full refund or exchange. Your happiness is our priority.
             </AccordionContent>
           </AccordionItem>
