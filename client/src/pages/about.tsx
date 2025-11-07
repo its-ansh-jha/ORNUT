@@ -86,20 +86,6 @@ export default function About() {
           </div>
         </div>
       </section>
-
-      <section className="py-16 md:py-24 container mx-auto max-w-7xl px-4 text-center">
-        <h2 className="text-3xl font-semibold mb-6">Join Our Community</h2>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-          Thousands of peanut butter lovers trust us for their daily spread. Join our community and
-          experience the difference that quality and care make.
-        </p>
-        <div className="flex flex-wrap gap-12 justify-center text-left">
-          <StatCard number="50,000+" label="Happy Customers" />
-          <StatCard number="100,000+" label="Jars Sold" />
-          <StatCard number="4.9/5" label="Average Rating" />
-          <StatCard number="95%" label="Would Recommend" />
-        </div>
-      </section>
     </div>
   );
 }
@@ -138,15 +124,6 @@ function ProcessStep({
       <div className="text-4xl font-bold text-primary mb-4">{number}</div>
       <h3 className="text-xl font-semibold mb-2">{title}</h3>
       <p className="text-muted-foreground">{description}</p>
-    </div>
-  );
-}
-
-function StatCard({ number, label }: { number: string; label: string }) {
-  return (
-    <div>
-      <div className="text-4xl font-bold text-primary mb-2">{number}</div>
-      <p className="text-muted-foreground">{label}</p>
     </div>
   );
 }
