@@ -102,6 +102,21 @@ export const returnTracking = pgTable("return_tracking", {
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
+// Coupons table
+export const coupons = pgTable("coupons", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  discountType: text("discount_type").notNull(), // "percentage" or "fixed"
+  discountValue: numeric("discount_value", { precision: 10, scale: 2 }).notNull(),
+  minOrderValue: numeric("min_order_value", { precision: 10, scale: 2 }).default("0").notNull(),
+  isPublic: boolean("is_public").default(false).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  usageLimit: integer("usage_limit"), // null means unlimited
+  usedCount: integer("used_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   cartItems: many(cartItems),
@@ -195,6 +210,7 @@ export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: t
 export const insertDeliveryTrackingSchema = createInsertSchema(deliveryTracking).omit({ id: true, timestamp: true });
 export const insertReturnSchema = createInsertSchema(returns).omit({ id: true, requestedAt: true, updatedAt: true });
 export const insertReturnTrackingSchema = createInsertSchema(returnTracking).omit({ id: true, timestamp: true });
+export const insertCouponSchema = createInsertSchema(coupons).omit({ id: true, createdAt: true, updatedAt: true, usedCount: true });
 
 // TypeScript types
 export type User = typeof users.$inferSelect;
@@ -223,3 +239,6 @@ export type InsertReturn = z.infer<typeof insertReturnSchema>;
 
 export type ReturnTracking = typeof returnTracking.$inferSelect;
 export type InsertReturnTracking = z.infer<typeof insertReturnTrackingSchema>;
+
+export type Coupon = typeof coupons.$inferSelect;
+export type InsertCoupon = z.infer<typeof insertCouponSchema>;
