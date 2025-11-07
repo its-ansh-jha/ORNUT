@@ -524,7 +524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/payment/create-order", verifyFirebaseToken, async (req, res) => {
     try {
       const userId = req.userId!;
-      const { shippingAddress, contactDetails } = req.body;
+      const { shippingAddress, contactDetails, couponId } = req.body;
       
       const cartItems = await storage.getCartItems(userId);
       if (cartItems.length === 0) {
@@ -536,7 +536,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         0
       );
       const shipping = subtotal >= 1200 ? 0 : 40;
-      const totalAmount = subtotal + shipping;
+      let couponDiscount = 0;
+      let appliedCouponCode = null;
+      
+      // Apply coupon if provided
+      if (couponId) {
+        const coupon = await storage.getCoupon(couponId);
+        if (coupon && coupon.isActive) {
+          if (coupon.usageLimit === null || coupon.usedCount < coupon.usageLimit) {
+            if (Number(coupon.minOrderValue) <= (subtotal + shipping)) {
+              if (coupon.discountType === "percentage") {
+                couponDiscount = ((subtotal + shipping) * Number(coupon.discountValue)) / 100;
+              } else if (coupon.discountType === "fixed") {
+                couponDiscount = Number(coupon.discountValue);
+              }
+              appliedCouponCode = coupon.code;
+            }
+          }
+        }
+      }
+      
+      const totalAmount = subtotal + shipping - couponDiscount;
       
       const orderNumber = `ORNUT${Date.now().toString().slice(-8)}`;
       
@@ -583,6 +603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalAmount,
         shippingAddress,
         contactDetails,
+        couponId,
         cartItems: cartItems.map((item) => ({
           productId: item.product.id,
           productName: item.product.name,
@@ -686,6 +707,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             order = await storage.createOrder(orderData, sessionData.cartItems);
             
+            // Increment coupon usage if coupon was applied
+            if (sessionData.couponId) {
+              await storage.incrementCouponUsage(sessionData.couponId);
+            }
+            
             // Clear cart and remove pending session
             await storage.clearCart(sessionData.userId);
             pendingPaymentSessions.delete(orderId);
@@ -788,6 +814,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
           
           order = await storage.createOrder(orderData, sessionData.cartItems);
+          
+          // Increment coupon usage if coupon was applied
+          if (sessionData.couponId) {
+            await storage.incrementCouponUsage(sessionData.couponId);
+          }
           
           // Clear cart and remove pending session
           await storage.clearCart(req.userId!);

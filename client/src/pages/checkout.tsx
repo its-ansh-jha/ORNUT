@@ -20,6 +20,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { load } from "@cashfreepayments/cashfree-js";
+import { X, Tag } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const checkoutSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -39,6 +41,8 @@ export default function Checkout() {
   const [, navigate] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [cashfree, setCashfree] = useState<any>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
 
   const { data: cartItems = [] } = useQuery<any[]>({
     queryKey: ["/api/cart"],
@@ -91,6 +95,7 @@ export default function Checkout() {
           email: data.email,
           phone: data.phone,
         },
+        couponId: appliedCoupon?.id,
       }),
     onSuccess: async (data: any) => {
       if (!cashfree) {
@@ -175,7 +180,50 @@ export default function Checkout() {
     0
   );
   const shipping = subtotal >= 1200 ? 0 : 40;
-  const total = subtotal + shipping;
+  const couponDiscount = appliedCoupon?.discountAmount || 0;
+  const total = subtotal + shipping - couponDiscount;
+
+  const applyCouponMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const orderTotal = subtotal + shipping;
+      return apiRequest("POST", "/api/coupons/validate", { code, orderTotal });
+    },
+    onSuccess: (data: any) => {
+      setAppliedCoupon(data);
+      setCouponCode("");
+      toast({
+        title: "Coupon applied!",
+        description: `You saved ₹${data.discountAmount.toFixed(2)}`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Invalid coupon",
+        description: error.message || "Please check the coupon code and try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleApplyCoupon = () => {
+    if (!couponCode.trim()) {
+      toast({
+        title: "Enter coupon code",
+        description: "Please enter a valid coupon code",
+        variant: "destructive",
+      });
+      return;
+    }
+    applyCouponMutation.mutate(couponCode.toUpperCase());
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    toast({
+      title: "Coupon removed",
+    });
+  };
 
   const onSubmit = async (data: CheckoutFormData) => {
     setIsProcessing(true);
@@ -347,6 +395,55 @@ export default function Checkout() {
                     {shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}
                   </span>
                 </div>
+              </div>
+
+              {/* Coupon Section */}
+              <div className="pt-4 border-t space-y-3">
+                <Label className="text-sm font-semibold flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Have a coupon?
+                </Label>
+                {!appliedCoupon ? (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                      data-testid="input-coupon-code"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleApplyCoupon}
+                      disabled={applyCouponMutation.isPending}
+                      data-testid="button-apply-coupon"
+                    >
+                      {applyCouponMutation.isPending ? "..." : "Apply"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-2 bg-primary/10 rounded">
+                      <Badge variant="default" className="font-mono">
+                        {appliedCoupon.code}
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveCoupon}
+                        data-testid="button-remove-coupon"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex justify-between text-sm text-primary">
+                      <span>Coupon Discount</span>
+                      <span data-testid="text-coupon-discount">-₹{couponDiscount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between pt-4 border-t text-lg font-bold">
