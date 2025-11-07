@@ -249,6 +249,15 @@ Order confirmation emails are sent via Formspree:
 3. **Firebase Admin SDK**: Currently using Firebase REST API for token verification (production should use Admin SDK with service account)
 
 ## Recent Changes (November 2025)
+- ✅ **CRITICAL BUG FIX - Payment Flow**: Fixed issue where orders were created even when payment failed or was abandoned
+  - Orders now created ONLY after successful payment verification
+  - Implemented pending payment session store (in-memory Map)
+  - Payment sessions expire after 1 hour if not completed
+  - Idempotent order creation (prevents duplicates)
+  - Both `/api/payment/verify` and webhook create orders on successful payment
+  - Failed/abandoned payments cleaned up automatically
+- ✅ **Currency Update**: All prices now display in Indian Rupees (₹) across entire website
+- ✅ **SEO Enhancement**: Updated favicon and Open Graph images to use Ornut logo instead of Replit
 - ✅ **Complete UI Redesign**: Warm brown/cream Ornut brand colors replacing green theme
 - ✅ **Branding Update**: Integrated Ornut logo, changed all text to "ORNUT" brand name
 - ✅ **Order Numbers**: Changed prefix from "PB..." to "ORNUT..." for brand consistency

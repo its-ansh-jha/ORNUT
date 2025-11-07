@@ -6,6 +6,28 @@ import { insertProductSchema, insertCartItemSchema, insertWishlistItemSchema, in
 import { z } from "zod";
 import { Cashfree, CFEnvironment } from "cashfree-pg";
 
+// Temporary store for pending payment sessions
+// In production, consider using Redis or database table
+const pendingPaymentSessions = new Map<string, {
+  userId: string;
+  orderNumber: string;
+  totalAmount: number;
+  shippingAddress: any;
+  contactDetails: any;
+  cartItems: any[];
+  createdAt: number;
+}>();
+
+// Cleanup old sessions every hour
+setInterval(() => {
+  const oneHourAgo = Date.now() - 60 * 60 * 1000;
+  for (const [orderNumber, session] of Array.from(pendingPaymentSessions.entries())) {
+    if (session.createdAt < oneHourAgo) {
+      pendingPaymentSessions.delete(orderNumber);
+    }
+  }
+}, 60 * 60 * 1000);
+
 async function verifyFirebaseToken(req: Request, res: Response, next: NextFunction) {
   try {
     const firebaseToken = req.headers["x-firebase-token"];
@@ -400,31 +422,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const response = await cashfree.PGCreateOrder(request);
       
-      const orderData = {
+      // Store payment session data temporarily
+      // Order will be created only after payment is verified
+      pendingPaymentSessions.set(orderNumber, {
         userId,
         orderNumber,
-        status: "payment_pending",
-        deliveryStatus: "order_placed",
-        totalAmount: totalAmount.toString(),
+        totalAmount,
         shippingAddress,
         contactDetails,
-      };
-      
-      const orderItems = cartItems.map((item) => ({
-        productId: item.product.id,
-        productName: item.product.name,
-        productImage: item.product.image,
-        quantity: item.quantity,
-        price: item.product.price,
-      }));
-      
-      const order = await storage.createOrder(orderData, orderItems);
+        cartItems: cartItems.map((item) => ({
+          productId: item.product.id,
+          productName: item.product.name,
+          productImage: item.product.image,
+          quantity: item.quantity,
+          price: item.product.price,
+        })),
+        createdAt: Date.now(),
+      });
       
       // Response pattern as per Cashfree docs
       res.json({
         payment_session_id: response.data.payment_session_id,
         order_id: orderNumber,
-        order_details: order,
       });
     } catch (error: any) {
       console.error("Payment order creation error:", error);
@@ -493,11 +512,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (webhookData.type === "PAYMENT_SUCCESS_WEBHOOK" && orderStatus === "PAID") {
         console.log(`Payment successful for order: ${orderId}`);
         
-        const order = await storage.getOrderByOrderNumber(orderId);
-        if (order && order.status !== "confirmed") {
-          await storage.updateOrderStatus(order.id, "confirmed");
+        // Check if order already exists (idempotency)
+        let order = await storage.getOrderByOrderNumber(orderId);
+        
+        if (!order) {
+          // Get pending payment session data
+          const sessionData = pendingPaymentSessions.get(orderId);
           
-          // Send confirmation email
+          if (sessionData) {
+            // Create order NOW that payment is confirmed via webhook
+            const orderData = {
+              userId: sessionData.userId,
+              orderNumber: sessionData.orderNumber,
+              status: "confirmed",
+              deliveryStatus: "order_placed",
+              totalAmount: sessionData.totalAmount.toString(),
+              shippingAddress: sessionData.shippingAddress,
+              contactDetails: sessionData.contactDetails,
+            };
+            
+            order = await storage.createOrder(orderData, sessionData.cartItems);
+            
+            // Clear cart and remove pending session
+            await storage.clearCart(sessionData.userId);
+            pendingPaymentSessions.delete(orderId);
+            
+            console.log(`Order created via webhook: ${orderId}`);
+          } else {
+            console.warn(`Payment session not found for order: ${orderId}`);
+          }
+        }
+        
+        // Send confirmation email
+        if (order) {
           try {
             const formspreeUrl = `https://formspree.io/f/${process.env.VITE_FORMSPREE_FORM_ID}`;
             await fetch(formspreeUrl, {
@@ -505,7 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 subject: `Payment Successful - Order ${orderId}`,
-                message: `Payment confirmed via webhook for order ${orderId}. Amount: ${webhookData.data?.order?.order_amount} INR`,
+                message: `Payment confirmed via webhook for order ${orderId}. Amount: ₹${webhookData.data?.order?.order_amount}`,
               }),
             });
           } catch (emailError) {
@@ -515,6 +562,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (webhookData.type === "PAYMENT_FAILED_WEBHOOK") {
         console.log(`Payment failed for order: ${orderId}`);
         
+        // Clean up pending payment session on failure
+        pendingPaymentSessions.delete(orderId);
+        
+        // If order somehow exists, mark it as failed
         const order = await storage.getOrderByOrderNumber(orderId);
         if (order) {
           await storage.updateOrderStatus(order.id, "failed");
@@ -556,16 +607,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Response pattern as per Cashfree docs
       if (response.data.order_status === "PAID") {
-        const order = await storage.getOrderByOrderNumber(orderId);
-        if (order) {
-          await storage.updateOrderStatus(order.id, "confirmed");
-          await storage.clearCart(req.userId!);
+        // Check if order already exists (idempotency)
+        let order = await storage.getOrderByOrderNumber(orderId);
+        
+        if (!order) {
+          // Get pending payment session data
+          const sessionData = pendingPaymentSessions.get(orderId);
           
+          if (!sessionData) {
+            return res.status(404).json({ error: "Payment session not found" });
+          }
+          
+          // Verify user owns this payment session
+          if (sessionData.userId !== req.userId) {
+            return res.status(403).json({ error: "Unauthorized" });
+          }
+          
+          // Create order NOW that payment is confirmed
+          const orderData = {
+            userId: sessionData.userId,
+            orderNumber: sessionData.orderNumber,
+            status: "confirmed",
+            deliveryStatus: "order_placed",
+            totalAmount: sessionData.totalAmount.toString(),
+            shippingAddress: sessionData.shippingAddress,
+            contactDetails: sessionData.contactDetails,
+          };
+          
+          order = await storage.createOrder(orderData, sessionData.cartItems);
+          
+          // Clear cart and remove pending session
+          await storage.clearCart(req.userId!);
+          pendingPaymentSessions.delete(orderId);
+          
+          // Send payment confirmation email
           try {
             const formspreeUrl = `https://formspree.io/f/${process.env.VITE_FORMSPREE_FORM_ID}`;
             const emailBody = {
-              subject: `New Order Payment Confirmed: ${orderId}`,
-              message: `Payment confirmed for order ${orderId}. Total: ${response.data.order_amount} INR`,
+              subject: `Payment Confirmed - Order ${orderId}`,
+              message: `Payment confirmed for order ${orderId}. Total: ₹${sessionData.totalAmount.toFixed(2)}`,
             };
             
             await fetch(formspreeUrl, {
@@ -584,6 +664,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           order: order,
         });
       } else {
+        // Payment not successful - clean up pending session
+        pendingPaymentSessions.delete(orderId);
+        
         return res.json({ 
           success: false, 
           status: response.data.order_status,
