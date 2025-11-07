@@ -242,7 +242,7 @@ function ProductCard({ product }: { product: Product }) {
             {product.name}
           </h3>
           <p className="text-2xl font-bold text-primary" data-testid={`text-product-price-${product.id}`}>
-            ${Number(product.price).toFixed(2)}
+            ₹{Number(product.price).toFixed(2)}
           </p>
         </Link>
         <Button 

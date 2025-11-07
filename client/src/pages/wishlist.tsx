@@ -106,7 +106,7 @@ export default function Wishlist() {
                     {item.product.name}
                   </h3>
                   <p className="text-xl font-bold text-primary" data-testid={`text-wishlist-item-price-${item.id}`}>
-                    ${Number(item.product.price).toFixed(2)}
+                    ₹{Number(item.product.price).toFixed(2)}
                   </p>
                 </div>
                 <Button

@@ -221,7 +221,7 @@ function ProductsManagement() {
                 </TableCell>
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell className="capitalize">{product.category}</TableCell>
-                <TableCell>${Number(product.price).toFixed(2)}</TableCell>
+                <TableCell>₹{Number(product.price).toFixed(2)}</TableCell>
                 <TableCell>
                   {product.inStock ? (
                     <Badge variant="default">{product.stockQuantity}</Badge>

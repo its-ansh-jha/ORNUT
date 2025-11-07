@@ -159,7 +159,7 @@ export default function TrackOrder() {
                     <div className="flex-1">
                       <p className="font-medium text-sm">{item.productName}</p>
                       <p className="text-xs text-muted-foreground">
-                        Qty: {item.quantity} × ${Number(item.price).toFixed(2)}
+                        Qty: {item.quantity} × ₹{Number(item.price).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -167,7 +167,7 @@ export default function TrackOrder() {
                 <div className="pt-3 border-t">
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
-                    <span>${Number(order.totalAmount).toFixed(2)}</span>
+                    <span>₹{Number(order.totalAmount).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
