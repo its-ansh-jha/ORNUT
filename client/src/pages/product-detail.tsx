@@ -206,8 +206,7 @@ export default function ProductDetail() {
             </TabsContent>
             <TabsContent value="shipping" className="mt-4">
               <p className="text-muted-foreground">
-                Free standard shipping on orders over ₹50. Standard delivery takes 3-5 business days.
-                Express shipping available for ₹9.99 (1-2 business days).
+                Free standard shipping on orders over ₹1200.
               </p>
             </TabsContent>
           </Tabs>
