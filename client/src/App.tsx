@@ -16,6 +16,7 @@ import Checkout from "@/pages/checkout";
 import Orders from "@/pages/orders";
 import TrackOrder from "@/pages/track-order";
 import Returns from "@/pages/returns";
+import Account from "@/pages/account";
 import FAQ from "@/pages/faq";
 import About from "@/pages/about";
 import Contact from "@/pages/contact";
@@ -39,6 +40,7 @@ function Router() {
           <Route path="/orders/:id" component={TrackOrder} />
           <Route path="/track-order" component={TrackOrder} />
           <Route path="/returns" component={Returns} />
+          <Route path="/account" component={Account} />
           <Route path="/faq" component={FAQ} />
           <Route path="/about" component={About} />
           <Route path="/contact" component={Contact} />
