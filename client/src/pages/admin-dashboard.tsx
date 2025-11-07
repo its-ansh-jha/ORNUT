@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Package, ShoppingCart, DollarSign, Truck, Plus, Edit, Trash2 } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, Truck, Plus, Edit, Trash2, Tag } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
@@ -86,6 +86,9 @@ export default function AdminDashboard() {
           <TabsTrigger value="returns" data-testid="tab-returns">
             Returns
           </TabsTrigger>
+          <TabsTrigger value="coupons" data-testid="tab-coupons">
+            Coupons
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="products">
           <ProductsManagement />
@@ -95,6 +98,9 @@ export default function AdminDashboard() {
         </TabsContent>
         <TabsContent value="returns">
           <ReturnsManagement />
+        </TabsContent>
+        <TabsContent value="coupons">
+          <CouponsManagement />
         </TabsContent>
       </Tabs>
     </div>
@@ -775,5 +781,369 @@ function ReturnStatusUpdater({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+interface Coupon {
+  id: number;
+  code: string;
+  discountType: "percentage" | "fixed";
+  discountValue: string;
+  minOrderValue: string;
+  isPublic: boolean;
+  isActive: boolean;
+  usageLimit: number | null;
+  usedCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function CouponsManagement() {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+
+  const { data: coupons, isLoading } = useQuery<Coupon[]>({
+    queryKey: ["/api/admin/coupons"],
+    queryFn: adminQueryFn,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => adminRequest("POST", "/api/admin/coupons", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
+      setOpen(false);
+      setEditingCoupon(null);
+      toast({
+        title: "Success",
+        description: "Coupon created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create coupon",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      adminRequest("PATCH", `/api/admin/coupons/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
+      setOpen(false);
+      setEditingCoupon(null);
+      toast({
+        title: "Success",
+        description: "Coupon updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update coupon",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => adminRequest("DELETE", `/api/admin/coupons/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
+      toast({
+        title: "Success",
+        description: "Coupon deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete coupon",
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle>Coupon Management</CardTitle>
+          <Dialog
+            open={open}
+            onOpenChange={(isOpen) => {
+              setOpen(isOpen);
+              if (!isOpen) setEditingCoupon(null);
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button data-testid="button-add-coupon">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Coupon
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingCoupon ? "Edit Coupon" : "Create Coupon"}
+                </DialogTitle>
+              </DialogHeader>
+              <CouponForm
+                coupon={editingCoupon}
+                onSubmit={(data) => {
+                  if (editingCoupon) {
+                    updateMutation.mutate({ id: editingCoupon.id, data });
+                  } else {
+                    createMutation.mutate(data);
+                  }
+                }}
+                isLoading={createMutation.isPending || updateMutation.isPending}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p>Loading coupons...</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Code</TableHead>
+                <TableHead>Discount</TableHead>
+                <TableHead>Min Order</TableHead>
+                <TableHead>Usage</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {coupons?.map((coupon) => (
+                <TableRow key={coupon.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <code className="font-mono font-bold">{coupon.code}</code>
+                      {coupon.isPublic && (
+                        <Badge variant="outline" className="text-xs">
+                          Public
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {coupon.discountType === "percentage"
+                      ? `${coupon.discountValue}%`
+                      : `₹${Number(coupon.discountValue).toFixed(2)}`}
+                  </TableCell>
+                  <TableCell>₹{Number(coupon.minOrderValue).toFixed(2)}</TableCell>
+                  <TableCell>
+                    {coupon.usedCount} / {coupon.usageLimit || "∞"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={coupon.isActive ? "default" : "secondary"}>
+                      {coupon.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setEditingCoupon(coupon);
+                          setOpen(true);
+                        }}
+                        data-testid={`button-edit-coupon-${coupon.id}`}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          if (
+                            confirm("Are you sure you want to delete this coupon?")
+                          ) {
+                            deleteMutation.mutate(coupon.id);
+                          }
+                        }}
+                        data-testid={`button-delete-coupon-${coupon.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {coupons?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    No coupons found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CouponForm({
+  coupon,
+  onSubmit,
+  isLoading,
+}: {
+  coupon: Coupon | null;
+  onSubmit: (data: any) => void;
+  isLoading: boolean;
+}) {
+  const [formData, setFormData] = useState({
+    code: coupon?.code || "",
+    discountType: (coupon?.discountType || "percentage") as "percentage" | "fixed",
+    discountValue: coupon?.discountValue || "",
+    minOrderValue: coupon?.minOrderValue || "0",
+    isPublic: coupon?.isPublic ?? true,
+    isActive: coupon?.isActive ?? true,
+    usageLimit: coupon?.usageLimit?.toString() || "",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      code: formData.code.toUpperCase().trim(),
+      discountType: formData.discountType,
+      discountValue: formData.discountValue,
+      minOrderValue: formData.minOrderValue,
+      isPublic: formData.isPublic,
+      isActive: formData.isActive,
+      usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="code">Coupon Code</Label>
+        <Input
+          id="code"
+          placeholder="SAVE20"
+          value={formData.code}
+          onChange={(e) =>
+            setFormData({ ...formData, code: e.target.value.toUpperCase() })
+          }
+          required
+          data-testid="input-coupon-code-form"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="discountType">Discount Type</Label>
+        <Select
+          value={formData.discountType}
+          onValueChange={(value: "percentage" | "fixed") =>
+            setFormData({ ...formData, discountType: value })
+          }
+        >
+          <SelectTrigger id="discountType" data-testid="select-discount-type">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="percentage">Percentage (%)</SelectItem>
+            <SelectItem value="fixed">Fixed Amount (₹)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="discountValue">Discount Value</Label>
+        <Input
+          id="discountValue"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder={formData.discountType === "percentage" ? "10" : "100"}
+          value={formData.discountValue}
+          onChange={(e) =>
+            setFormData({ ...formData, discountValue: e.target.value })
+          }
+          required
+          data-testid="input-discount-value"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="minOrderValue">Minimum Order Value (₹)</Label>
+        <Input
+          id="minOrderValue"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="0"
+          value={formData.minOrderValue}
+          onChange={(e) =>
+            setFormData({ ...formData, minOrderValue: e.target.value })
+          }
+          required
+          data-testid="input-min-order-value"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="usageLimit">Usage Limit (leave blank for unlimited)</Label>
+        <Input
+          id="usageLimit"
+          type="number"
+          min="1"
+          placeholder="Unlimited"
+          value={formData.usageLimit}
+          onChange={(e) =>
+            setFormData({ ...formData, usageLimit: e.target.value })
+          }
+          data-testid="input-usage-limit"
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="isPublic"
+          checked={formData.isPublic}
+          onChange={(e) =>
+            setFormData({ ...formData, isPublic: e.target.checked })
+          }
+          data-testid="checkbox-is-public"
+          className="rounded"
+        />
+        <Label htmlFor="isPublic" className="cursor-pointer">
+          Show to all users (public)
+        </Label>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="isActive"
+          checked={formData.isActive}
+          onChange={(e) =>
+            setFormData({ ...formData, isActive: e.target.checked })
+          }
+          data-testid="checkbox-is-active"
+          className="rounded"
+        />
+        <Label htmlFor="isActive" className="cursor-pointer">
+          Active
+        </Label>
+      </div>
+
+      <Button type="submit" disabled={isLoading} className="w-full" data-testid="button-submit-coupon">
+        {isLoading ? "Saving..." : coupon ? "Update Coupon" : "Create Coupon"}
+      </Button>
+    </form>
   );
 }
