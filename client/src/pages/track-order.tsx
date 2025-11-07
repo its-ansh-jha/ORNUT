@@ -58,6 +58,12 @@ export default function TrackOrder() {
     enabled: !!searchedOrderNumber,
   });
 
+  // Check if return already exists for this order
+  const { data: existingReturns = [] } = useQuery<any[]>({
+    queryKey: ["/api/returns"],
+    enabled: !!user,
+  });
+
   const returnMutation = useMutation({
     mutationFn: async (reason: string) => {
       const orderToReturn = order || publicTrackingData?.order;
@@ -190,7 +196,11 @@ export default function TrackOrder() {
   const deliveredTracking = displayTracking.find((t: any) => t.status === "delivered");
   const deliveryDate = deliveredTracking ? new Date(deliveredTracking.timestamp) : null;
   const daysElapsed = deliveryDate ? differenceInDays(new Date(), deliveryDate) : null;
-  const canRequestReturn = user && displayOrder.deliveryStatus === "delivered" && daysElapsed !== null && daysElapsed <= 5;
+  
+  // Check if return already exists for this order
+  const hasExistingReturn = existingReturns.some((r: any) => r.orderId === displayOrder?.id);
+  
+  const canRequestReturn = user && displayOrder.deliveryStatus === "delivered" && daysElapsed !== null && daysElapsed <= 5 && !hasExistingReturn;
   const isPublicTracking = !user && searchedOrderNumber;
 
   return (
