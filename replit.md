@@ -214,26 +214,21 @@ const result = await cashfree.checkout({
 - Shows loading states and user feedback
 
 ### Configuration:
-- **Sandbox Mode** (default): For testing without real transactions
-  - Frontend: Set `VITE_CASHFREE_MODE=sandbox` (or leave unset)
-  - Backend: Runs in SANDBOX when `NODE_ENV=development`
-  - Use Cashfree test credentials
-  
-- **Production Mode**: For real transactions
-  - Frontend: Set `VITE_CASHFREE_MODE=production`
-  - Backend: Set `NODE_ENV=production`
-  - Set `CASHFREE_APP_ID` and `CASHFREE_SECRET_KEY` with production credentials
+- **Production Mode** (current setup): For real transactions
+  - Backend: Always uses `CFEnvironment.PRODUCTION` 
+  - Frontend: Always uses production mode
+  - Set `CASHFREE_APP_ID` and `CASHFREE_SECRET_KEY` with production credentials in Replit Secrets
   - **Configure Webhook in Cashfree Dashboard**:
     1. Go to Cashfree Dashboard > Developers > Webhooks
     2. Add webhook URL: `https://your-app-domain.replit.dev/api/payment/webhook`
     3. Select events: `PAYMENT_SUCCESS_WEBHOOK`, `PAYMENT_FAILED_WEBHOOK`
-  - Test thoroughly before going live
+  - Uses official Cashfree SDK response pattern: `response.data.payment_session_id`
+
+**Note**: This integration follows the official [Cashfree Web Integration Guide](https://www.cashfree.com/docs/payments/online/web/redirect) for production deployments.
 
 ### Environment Variables:
-- `CASHFREE_APP_ID` - Backend API client ID (x-client-id)
-- `CASHFREE_SECRET_KEY` - Backend API secret (x-client-secret)
-- `VITE_CASHFREE_APP_ID` - Frontend SDK app ID (same as backend for consistency)
-- `VITE_CASHFREE_MODE` - Frontend SDK mode: "production" or "sandbox"
+- `CASHFREE_APP_ID` - Backend API client ID (x-client-id) - Production credentials
+- `CASHFREE_SECRET_KEY` - Backend API secret (x-client-secret) - Production credentials
 
 ### Security:
 - Payment order creation and verification done server-side

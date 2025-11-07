@@ -48,11 +48,10 @@ export default function Checkout() {
   useEffect(() => {
     const initializeSDK = async () => {
       try {
-        const cashfreeMode = import.meta.env.VITE_CASHFREE_MODE === "production" 
-          ? "production" 
-          : "sandbox";
-        const cf = await load({ mode: cashfreeMode });
+        // Initialize Cashfree SDK in production mode
+        const cf = await load({ mode: "production" });
         setCashfree(cf);
+        console.log("Cashfree SDK initialized in production mode");
       } catch (error) {
         console.error("Cashfree SDK initialization error:", error);
         toast({

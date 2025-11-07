@@ -372,8 +372,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Payment gateway not configured" });
       }
       
+      // Initialize Cashfree SDK in PRODUCTION mode
       const cashfree = new Cashfree(
-        process.env.NODE_ENV === "production" ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX,
+        CFEnvironment.PRODUCTION,
         cashfreeAppId,
         cashfreeSecretKey
       );
@@ -391,6 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         order_meta: {
           return_url: `${req.protocol}://${req.get('host')}/payment-status?order_id=${orderNumber}`,
         },
+        order_note: `Order for ${cartItems.length} items`,
       };
       
       const response = await cashfree.PGCreateOrder(request);
@@ -415,9 +417,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const order = await storage.createOrder(orderData, orderItems);
       
-      // SDK v5+ returns data directly without .data wrapper
+      // Response pattern as per Cashfree docs
       res.json({
-        payment_session_id: response.payment_session_id,
+        payment_session_id: response.data.payment_session_id,
         order_id: orderNumber,
         order_details: order,
       });
@@ -455,14 +457,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Payment gateway not configured" });
       }
       
+      // Initialize Cashfree SDK in PRODUCTION mode
       const cashfree = new Cashfree(
-        process.env.NODE_ENV === "production" ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX,
+        CFEnvironment.PRODUCTION,
         cashfreeAppId,
         cashfreeSecretKey
       );
 
       try {
-        // Verify signature - this will throw if verification fails
+        // Verify webhook signature - this will throw if verification fails
         cashfree.PGVerifyWebhookSignature(signature, rawBody.toString(), timestamp);
         console.log("Webhook signature verified successfully");
       } catch (verifyError) {
@@ -539,16 +542,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Payment gateway not configured" });
       }
       
+      // Initialize Cashfree SDK in PRODUCTION mode
       const cashfree = new Cashfree(
-        process.env.NODE_ENV === "production" ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX,
+        CFEnvironment.PRODUCTION,
         cashfreeAppId,
         cashfreeSecretKey
       );
       
       const response = await cashfree.PGFetchOrder(orderId);
       
-      // SDK v5+ returns data directly without .data wrapper
-      if (response.order_status === "PAID") {
+      // Response pattern as per Cashfree docs
+      if (response.data.order_status === "PAID") {
         const order = await storage.getOrderByOrderNumber(orderId);
         if (order) {
           await storage.updateOrderStatus(order.id, "confirmed");
@@ -558,7 +562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const formspreeUrl = `https://formspree.io/f/${process.env.VITE_FORMSPREE_FORM_ID}`;
             const emailBody = {
               subject: `New Order Payment Confirmed: ${orderId}`,
-              message: `Payment confirmed for order ${orderId}. Total: ${response.order_amount} INR`,
+              message: `Payment confirmed for order ${orderId}. Total: ${response.data.order_amount} INR`,
             };
             
             await fetch(formspreeUrl, {
@@ -579,7 +583,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         return res.json({ 
           success: false, 
-          status: response.order_status,
+          status: response.data.order_status,
         });
       }
     } catch (error) {
