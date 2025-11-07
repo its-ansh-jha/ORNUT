@@ -479,8 +479,8 @@ function ReturnsManagement() {
   });
 
   const updateReturnMutation = useMutation({
-    mutationFn: async ({ id, status, adminNotes }: any) => {
-      return adminRequest(`/api/admin/returns/${id}`, "PATCH", { status, adminNotes });
+    mutationFn: async ({ id, status, adminResponse }: any) => {
+      return adminRequest("PATCH", `/api/admin/returns/${id}`, { status, adminResponse });
     },
     onSuccess: () => {
       toast({
@@ -498,19 +498,19 @@ function ReturnsManagement() {
     },
   });
 
-  const handleApprove = (returnId: number) => {
+  const handleApprove = (returnId: string) => {
     updateReturnMutation.mutate({
       id: returnId,
       status: "approved",
-      adminNotes: "Return request approved",
+      adminResponse: "Return request approved",
     });
   };
 
-  const handleReject = (returnId: number) => {
+  const handleReject = (returnId: string) => {
     updateReturnMutation.mutate({
       id: returnId,
       status: "rejected",
-      adminNotes: "Return request rejected",
+      adminResponse: "Return request rejected",
     });
   };
 

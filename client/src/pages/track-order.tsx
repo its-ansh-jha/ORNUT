@@ -61,7 +61,7 @@ export default function TrackOrder() {
   const returnMutation = useMutation({
     mutationFn: async (reason: string) => {
       const orderToReturn = order || publicTrackingData?.order;
-      return apiRequest("/api/returns", "POST", { orderId: orderToReturn.id, reason });
+      return apiRequest("POST", "/api/returns", { orderId: orderToReturn.id, reason });
     },
     onSuccess: () => {
       toast({
