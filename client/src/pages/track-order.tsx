@@ -1,9 +1,22 @@
+import { useState } from "react";
 import { useRoute } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Circle, Package } from "lucide-react";
-import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { CheckCircle2, Circle, Package, RotateCcw } from "lucide-react";
+import { format, differenceInDays } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 const deliveryStatuses = [
   { key: "order_placed", label: "Order Placed" },
@@ -17,6 +30,9 @@ const deliveryStatuses = [
 export default function TrackOrder() {
   const [, params] = useRoute("/orders/:id");
   const orderId = params?.id;
+  const { toast } = useToast();
+  const [showReturnDialog, setShowReturnDialog] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
 
   const { data: order, isLoading } = useQuery<any>({
     queryKey: ["/api/orders", orderId],
@@ -27,6 +43,43 @@ export default function TrackOrder() {
     queryKey: ["/api/orders", orderId, "tracking"],
     enabled: !!orderId,
   });
+
+  const returnMutation = useMutation({
+    mutationFn: async (reason: string) => {
+      return apiRequest(`/api/returns`, {
+        method: "POST",
+        body: JSON.stringify({ orderId: order.id, reason }),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Return request submitted",
+        description: "We'll review your request and get back to you soon.",
+      });
+      setShowReturnDialog(false);
+      setReturnReason("");
+      queryClient.invalidateQueries({ queryKey: ["/api/returns"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to submit return request",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleReturnSubmit = () => {
+    if (!returnReason.trim()) {
+      toast({
+        title: "Reason required",
+        description: "Please provide a reason for the return.",
+        variant: "destructive",
+      });
+      return;
+    }
+    returnMutation.mutate(returnReason);
+  };
 
   if (isLoading) {
     return (
@@ -48,6 +101,11 @@ export default function TrackOrder() {
   const currentStatusIndex = deliveryStatuses.findIndex(
     (s) => s.key === order.deliveryStatus
   );
+
+  const deliveredTracking = tracking.find((t: any) => t.status === "delivered");
+  const deliveryDate = deliveredTracking ? new Date(deliveredTracking.timestamp) : null;
+  const daysElapsed = deliveryDate ? differenceInDays(new Date(), deliveryDate) : null;
+  const canRequestReturn = order.deliveryStatus === "delivered" && daysElapsed !== null && daysElapsed <= 5;
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -174,7 +232,72 @@ export default function TrackOrder() {
             </CardContent>
           </Card>
         </div>
+
+        {canRequestReturn && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Return Options</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Delivered {daysElapsed} {daysElapsed === 1 ? 'day' : 'days'} ago. 
+                    You have {5 - (daysElapsed || 0)} {(5 - (daysElapsed || 0)) === 1 ? 'day' : 'days'} left to request a return.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowReturnDialog(true)}
+                  data-testid="button-request-return"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Request Return
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      <Dialog open={showReturnDialog} onOpenChange={setShowReturnDialog}>
+        <DialogContent data-testid="dialog-request-return">
+          <DialogHeader>
+            <DialogTitle>Request Return</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for your return request. Our team will review and get back to you shortly.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              placeholder="Reason for return..."
+              value={returnReason}
+              onChange={(e) => setReturnReason(e.target.value)}
+              rows={5}
+              data-testid="input-return-reason"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowReturnDialog(false);
+                setReturnReason("");
+              }}
+              data-testid="button-cancel-return"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleReturnSubmit}
+              disabled={returnMutation.isPending}
+              data-testid="button-submit-return"
+            >
+              {returnMutation.isPending ? "Submitting..." : "Submit Request"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
