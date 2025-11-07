@@ -8,6 +8,7 @@ import {
   orders,
   orderItems,
   deliveryTracking,
+  returns,
   type User,
   type InsertUser,
   type Product,
@@ -22,6 +23,8 @@ import {
   type InsertOrderItem,
   type DeliveryTracking,
   type InsertDeliveryTracking,
+  type Return,
+  type InsertReturn,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -54,6 +57,11 @@ export interface IStorage {
   addDeliveryTracking(tracking: InsertDeliveryTracking): Promise<DeliveryTracking>;
   getDeliveryTracking(orderId: string): Promise<DeliveryTracking[]>;
   updateOrderDeliveryStatus(orderId: string, status: string): Promise<void>;
+  
+  createReturn(returnRequest: InsertReturn): Promise<Return>;
+  getReturns(userId: string): Promise<any[]>;
+  getAllReturns(): Promise<any[]>;
+  updateReturn(id: string, data: Partial<InsertReturn>): Promise<Return | undefined>;
   
   getStats(): Promise<any>;
 }
@@ -249,6 +257,50 @@ export class DatabaseStorage implements IStorage {
 
   async updateOrderDeliveryStatus(orderId: string, status: string): Promise<void> {
     await db.update(orders).set({ deliveryStatus: status }).where(eq(orders.id, orderId));
+  }
+
+  async createReturn(returnRequest: InsertReturn): Promise<Return> {
+    const [newReturn] = await db.insert(returns).values(returnRequest).returning();
+    return newReturn;
+  }
+
+  async getReturns(userId: string): Promise<any[]> {
+    const userReturns = await db.query.returns.findMany({
+      where: eq(returns.userId, userId),
+      orderBy: [desc(returns.requestedAt)],
+      with: {
+        order: {
+          with: {
+            orderItems: true,
+          },
+        },
+      },
+    });
+    return userReturns;
+  }
+
+  async getAllReturns(): Promise<any[]> {
+    const allReturns = await db.query.returns.findMany({
+      orderBy: [desc(returns.requestedAt)],
+      with: {
+        order: {
+          with: {
+            orderItems: true,
+          },
+        },
+        user: true,
+      },
+    });
+    return allReturns;
+  }
+
+  async updateReturn(id: string, data: Partial<InsertReturn>): Promise<Return | undefined> {
+    const [updatedReturn] = await db
+      .update(returns)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(returns.id, id))
+      .returning();
+    return updatedReturn || undefined;
   }
 
   async getStats(): Promise<any> {

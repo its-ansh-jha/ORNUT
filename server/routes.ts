@@ -368,6 +368,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Return requests routes
+  app.post("/api/returns", verifyFirebaseToken, async (req, res) => {
+    try {
+      const userId = req.userId!;
+      const { orderId, reason } = req.body;
+
+      if (!orderId || !reason) {
+        return res.status(400).json({ error: "Order ID and reason are required" });
+      }
+
+      // Verify order belongs to user and is delivered
+      const order = await storage.getOrder(orderId);
+      if (!order || order.userId !== userId) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      if (order.deliveryStatus !== "delivered") {
+        return res.status(400).json({ error: "Can only return delivered orders" });
+      }
+
+      // Check if order was delivered within last 5 days
+      const deliveryTracking = await storage.getDeliveryTracking(orderId);
+      const deliveredTracking = deliveryTracking.find((t) => t.status === "delivered");
+      
+      if (deliveredTracking) {
+        const deliveredDate = new Date(deliveredTracking.timestamp);
+        const daysSinceDelivery = Math.floor((Date.now() - deliveredDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysSinceDelivery > 5) {
+          return res.status(400).json({ 
+            error: "Return window has expired. Returns are only accepted within 5 days of delivery." 
+          });
+        }
+      }
+
+      // Check if return already exists
+      const existingReturns = await storage.getReturns(userId);
+      const existingReturn = existingReturns.find((r) => r.orderId === orderId);
+      
+      if (existingReturn) {
+        return res.status(400).json({ error: "Return request already exists for this order" });
+      }
+
+      const returnRequest = await storage.createReturn({
+        orderId,
+        userId,
+        reason,
+        status: "pending",
+      });
+
+      res.json(returnRequest);
+    } catch (error) {
+      console.error("Create return error:", error);
+      res.status(500).json({ error: "Failed to create return request" });
+    }
+  });
+
+  app.get("/api/returns", verifyFirebaseToken, async (req, res) => {
+    try {
+      const userId = req.userId!;
+      const returns = await storage.getReturns(userId);
+      res.json(returns);
+    } catch (error) {
+      console.error("Get returns error:", error);
+      res.status(500).json({ error: "Failed to fetch returns" });
+    }
+  });
+
   app.post("/api/payment/create-order", verifyFirebaseToken, async (req, res) => {
     try {
       const userId = req.userId!;
@@ -738,6 +806,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Add tracking error:", error);
       res.status(500).json({ error: "Failed to add tracking" });
+    }
+  });
+
+  app.get("/api/admin/returns", verifyAdmin, async (req, res) => {
+    try {
+      const returns = await storage.getAllReturns();
+      res.json(returns);
+    } catch (error) {
+      console.error("Get admin returns error:", error);
+      res.status(500).json({ error: "Failed to fetch returns" });
+    }
+  });
+
+  app.patch("/api/admin/returns/:id", verifyAdmin, async (req, res) => {
+    try {
+      const { status, adminResponse } = req.body;
+      const returnId = req.params.id;
+
+      const updatedReturn = await storage.updateReturn(returnId, {
+        status,
+        adminResponse: adminResponse || null,
+      });
+
+      if (!updatedReturn) {
+        return res.status(404).json({ error: "Return not found" });
+      }
+
+      res.json(updatedReturn);
+    } catch (error) {
+      console.error("Update return error:", error);
+      res.status(500).json({ error: "Failed to update return" });
     }
   });
 
