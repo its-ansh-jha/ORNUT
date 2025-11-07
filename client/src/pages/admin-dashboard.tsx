@@ -83,12 +83,18 @@ export default function AdminDashboard() {
           <TabsTrigger value="orders" data-testid="tab-orders">
             Orders
           </TabsTrigger>
+          <TabsTrigger value="returns" data-testid="tab-returns">
+            Returns
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="products">
           <ProductsManagement />
         </TabsContent>
         <TabsContent value="orders">
           <OrdersManagement />
+        </TabsContent>
+        <TabsContent value="returns">
+          <ReturnsManagement />
         </TabsContent>
       </Tabs>
     </div>
@@ -457,6 +463,131 @@ function OrdersManagement() {
                 </TableCell>
               </TableRow>
             ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ReturnsManagement() {
+  const { toast } = useToast();
+  
+  const { data: returns = [], refetch } = useQuery<any[]>({
+    queryKey: ["/api/admin/returns"],
+    queryFn: adminQueryFn,
+  });
+
+  const updateReturnMutation = useMutation({
+    mutationFn: async ({ id, status, adminNotes }: any) => {
+      return adminRequest(`/api/admin/returns/${id}`, "PATCH", { status, adminNotes });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Return request updated",
+        description: "The return status has been updated successfully.",
+      });
+      refetch();
+    },
+    onError: () => {
+      toast({
+        title: "Update failed",
+        description: "Failed to update return status.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleApprove = (returnId: number) => {
+    updateReturnMutation.mutate({
+      id: returnId,
+      status: "approved",
+      adminNotes: "Return request approved",
+    });
+  };
+
+  const handleReject = (returnId: number) => {
+    updateReturnMutation.mutate({
+      id: returnId,
+      status: "rejected",
+      adminNotes: "Return request rejected",
+    });
+  };
+
+  const statusColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+    pending: "secondary",
+    approved: "default",
+    rejected: "destructive",
+    completed: "outline",
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Return Requests</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order Number</TableHead>
+              <TableHead>Reason</TableHead>
+              <TableHead>Requested</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {returns.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  No return requests found
+                </TableCell>
+              </TableRow>
+            ) : (
+              returns.map((returnRequest) => (
+                <TableRow key={returnRequest.id}>
+                  <TableCell className="font-medium">
+                    {returnRequest.orderNumber}
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate">
+                    {returnRequest.reason}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(returnRequest.requestedAt), "PP")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusColors[returnRequest.status]}>
+                      {returnRequest.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {returnRequest.status === "pending" && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleApprove(returnRequest.id)}
+                          disabled={updateReturnMutation.isPending}
+                          data-testid={`button-approve-return-${returnRequest.id}`}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleReject(returnRequest.id)}
+                          disabled={updateReturnMutation.isPending}
+                          data-testid={`button-reject-return-${returnRequest.id}`}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </CardContent>

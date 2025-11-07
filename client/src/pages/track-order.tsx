@@ -46,10 +46,7 @@ export default function TrackOrder() {
 
   const returnMutation = useMutation({
     mutationFn: async (reason: string) => {
-      return apiRequest(`/api/returns`, {
-        method: "POST",
-        body: JSON.stringify({ orderId: order.id, reason }),
-      });
+      return apiRequest("/api/returns", "POST", { orderId: order.id, reason });
     },
     onSuccess: () => {
       toast({
