@@ -341,9 +341,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.zipCode}
             
             Order Items:
-            ${orderItems.map((item) => `- ${item.productName} x ${item.quantity} @ $${item.price}`).join('\n')}
+            ${orderItems.map((item) => `- ${item.productName} x ${item.quantity} @ ₹${item.price}`).join('\n')}
             
-            Total: $${totalAmount.toFixed(2)}
+            Total: ₹${totalAmount.toFixed(2)}
           `,
         };
         

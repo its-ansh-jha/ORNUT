@@ -51,10 +51,14 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground">Shipping Info</a>
+                <Link href="/contact">
+                  <a className="text-muted-foreground hover:text-foreground">Contact Us</a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground">Returns</a>
+                <Link href="/about">
+                  <a className="text-muted-foreground hover:text-foreground">About Us</a>
+                </Link>
               </li>
             </ul>
           </div>
