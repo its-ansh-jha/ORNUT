@@ -285,6 +285,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public endpoint to track order by order number (no auth required)
+  app.get("/api/track/:orderNumber", async (req, res) => {
+    try {
+      const orderNumber = req.params.orderNumber.toUpperCase();
+      const order = await storage.getOrderByOrderNumber(orderNumber);
+      
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      const tracking = await storage.getDeliveryTracking(order.id);
+      
+      res.json({
+        order,
+        tracking,
+      });
+    } catch (error) {
+      console.error("Track order error:", error);
+      res.status(500).json({ error: "Failed to track order" });
+    }
+  });
+
   app.post("/api/orders", verifyFirebaseToken, async (req, res) => {
     try {
       const userId = req.userId!;

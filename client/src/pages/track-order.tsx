@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -13,9 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle2, Circle, Package, RotateCcw } from "lucide-react";
+import { CheckCircle2, Circle, Package, RotateCcw, Search } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth-context";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 const deliveryStatuses = [
@@ -30,23 +32,35 @@ const deliveryStatuses = [
 export default function TrackOrder() {
   const [, params] = useRoute("/orders/:id");
   const orderId = params?.id;
+  const { user } = useAuth();
   const { toast } = useToast();
+  
+  const [orderNumber, setOrderNumber] = useState("");
+  const [searchedOrderNumber, setSearchedOrderNumber] = useState("");
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [returnReason, setReturnReason] = useState("");
 
-  const { data: order, isLoading } = useQuery<any>({
+  // For authenticated users viewing their order
+  const { data: order, isLoading: isLoadingOrder } = useQuery<any>({
     queryKey: ["/api/orders", orderId],
-    enabled: !!orderId,
+    enabled: !!orderId && !!user,
   });
 
-  const { data: tracking = [] } = useQuery<any[]>({
+  const { data: tracking = [], isLoading: isLoadingTracking } = useQuery<any[]>({
     queryKey: ["/api/orders", orderId, "tracking"],
-    enabled: !!orderId,
+    enabled: !!orderId && !!user,
+  });
+
+  // For public tracking by order number
+  const { data: publicTrackingData, isLoading: isLoadingPublicTracking } = useQuery<any>({
+    queryKey: ["/api/track", searchedOrderNumber],
+    enabled: !!searchedOrderNumber,
   });
 
   const returnMutation = useMutation({
     mutationFn: async (reason: string) => {
-      return apiRequest("/api/returns", "POST", { orderId: order.id, reason });
+      const orderToReturn = order || publicTrackingData?.order;
+      return apiRequest("/api/returns", "POST", { orderId: orderToReturn.id, reason });
     },
     onSuccess: () => {
       toast({
@@ -78,6 +92,66 @@ export default function TrackOrder() {
     returnMutation.mutate(returnReason);
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orderNumber.trim()) {
+      toast({
+        title: "Order number required",
+        description: "Please enter your order number to track.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSearchedOrderNumber(orderNumber.toUpperCase());
+  };
+
+  const displayOrder = order || publicTrackingData?.order;
+  const displayTracking = tracking.length > 0 ? tracking : (publicTrackingData?.tracking || []);
+  const isLoading = isLoadingOrder || isLoadingTracking || isLoadingPublicTracking;
+
+  // Show search form if accessed from /track-order route
+  if (!orderId && !searchedOrderNumber) {
+    return (
+      <div className="container mx-auto max-w-2xl px-4 py-16">
+        <div className="text-center mb-8">
+          <Package className="h-24 w-24 mx-auto mb-6 text-primary" />
+          <h1 className="text-3xl font-bold mb-4" data-testid="text-track-order-title">
+            Track Your Order
+          </h1>
+          <p className="text-muted-foreground">
+            Enter your order number to track your delivery
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Enter Order Number</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSearch} className="space-y-4">
+              <div>
+                <Input
+                  placeholder="e.g., ORNUT12345678"
+                  value={orderNumber}
+                  onChange={(e) => setOrderNumber(e.target.value.toUpperCase())}
+                  className="text-lg"
+                  data-testid="input-order-number"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Your order number starts with "ORNUT" followed by numbers
+                </p>
+              </div>
+              <Button type="submit" className="w-full" data-testid="button-track-order">
+                <Search className="w-4 h-4 mr-2" />
+                Track Order
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -86,29 +160,57 @@ export default function TrackOrder() {
     );
   }
 
-  if (!order) {
+  if (!displayOrder) {
     return (
       <div className="container mx-auto max-w-4xl px-4 py-16 text-center">
         <Package className="h-24 w-24 mx-auto mb-6 text-muted-foreground" />
         <h1 className="text-3xl font-bold mb-4">Order not found</h1>
+        <p className="text-muted-foreground mb-6">
+          We couldn't find an order with that number. Please check and try again.
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setSearchedOrderNumber("");
+            setOrderNumber("");
+          }}
+          data-testid="button-search-again"
+        >
+          Search Again
+        </Button>
       </div>
     );
   }
 
   const currentStatusIndex = deliveryStatuses.findIndex(
-    (s) => s.key === order.deliveryStatus
+    (s) => s.key === displayOrder.deliveryStatus
   );
 
-  const deliveredTracking = tracking.find((t: any) => t.status === "delivered");
+  const deliveredTracking = displayTracking.find((t: any) => t.status === "delivered");
   const deliveryDate = deliveredTracking ? new Date(deliveredTracking.timestamp) : null;
   const daysElapsed = deliveryDate ? differenceInDays(new Date(), deliveryDate) : null;
-  const canRequestReturn = order.deliveryStatus === "delivered" && daysElapsed !== null && daysElapsed <= 5;
+  const canRequestReturn = user && displayOrder.deliveryStatus === "delivered" && daysElapsed !== null && daysElapsed <= 5;
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8" data-testid="text-track-order-title">
-        Track Order #{order.orderNumber}
-      </h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold" data-testid="text-track-order-title">
+          Track Order #{displayOrder.orderNumber}
+        </h1>
+        {searchedOrderNumber && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchedOrderNumber("");
+              setOrderNumber("");
+            }}
+            data-testid="button-new-search"
+          >
+            <Search className="w-4 h-4 mr-2" />
+            New Search
+          </Button>
+        )}
+      </div>
 
       <div className="grid gap-8">
         <Card>
@@ -156,7 +258,7 @@ export default function TrackOrder() {
                         </h3>
                         {isCurrent && <Badge>Current</Badge>}
                       </div>
-                      {tracking
+                      {displayTracking
                         .filter((t: any) => t.status === status.key)
                         .map((t: any, idx: number) => (
                           <div key={idx} className="text-sm text-muted-foreground mt-1">
@@ -184,14 +286,14 @@ export default function TrackOrder() {
             </CardHeader>
             <CardContent>
               <div className="text-sm space-y-1">
-                <p className="font-semibold">{order.contactDetails.fullName}</p>
-                <p>{order.shippingAddress.address}</p>
+                <p className="font-semibold">{displayOrder.contactDetails.fullName}</p>
+                <p>{displayOrder.shippingAddress.address}</p>
                 <p>
-                  {order.shippingAddress.city}, {order.shippingAddress.state}{" "}
-                  {order.shippingAddress.zipCode}
+                  {displayOrder.shippingAddress.city}, {displayOrder.shippingAddress.state}{" "}
+                  {displayOrder.shippingAddress.zipCode}
                 </p>
-                <p className="pt-2">{order.contactDetails.phone}</p>
-                <p>{order.contactDetails.email}</p>
+                <p className="pt-2">{displayOrder.contactDetails.phone}</p>
+                <p>{displayOrder.contactDetails.email}</p>
               </div>
             </CardContent>
           </Card>
@@ -202,7 +304,7 @@ export default function TrackOrder() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {order.orderItems?.map((item: any, idx: number) => (
+                {displayOrder.orderItems?.map((item: any, idx: number) => (
                   <div key={idx} className="flex gap-3">
                     <div className="w-12 h-12 rounded overflow-hidden">
                       <img
@@ -222,7 +324,7 @@ export default function TrackOrder() {
                 <div className="pt-3 border-t">
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
-                    <span>₹{Number(order.totalAmount).toFixed(2)}</span>
+                    <span>₹{Number(displayOrder.totalAmount).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
