@@ -379,6 +379,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cashfreeSecretKey
       );
       
+      // Production mode requires HTTPS return URL
+      const returnUrl = `https://${req.get('host')}/payment-status?order_id=${orderNumber}`;
+      
       const request = {
         order_amount: totalAmount,
         order_currency: "INR",
@@ -390,7 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           customer_phone: contactDetails.phone,
         },
         order_meta: {
-          return_url: `${req.protocol}://${req.get('host')}/payment-status?order_id=${orderNumber}`,
+          return_url: returnUrl,
         },
         order_note: `Order for ${cartItems.length} items`,
       };
