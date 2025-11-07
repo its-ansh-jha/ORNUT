@@ -862,6 +862,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/returns/:id/tracking", verifyAdmin, async (req, res) => {
+    try {
+      const { status, location, message } = req.body;
+      const returnId = req.params.id;
+
+      // Update the return status
+      await storage.updateReturnStatus(returnId, status);
+
+      // Add tracking entry
+      const tracking = await storage.addReturnTracking({
+        returnId,
+        status,
+        location: location || null,
+        message,
+      });
+
+      res.json(tracking);
+    } catch (error) {
+      console.error("Add return tracking error:", error);
+      res.status(500).json({ error: "Failed to add return tracking" });
+    }
+  });
+
+  app.get("/api/returns/:id/tracking", async (req, res) => {
+    try {
+      const returnId = req.params.id;
+      const tracking = await storage.getReturnTracking(returnId);
+      res.json(tracking);
+    } catch (error) {
+      console.error("Get return tracking error:", error);
+      res.status(500).json({ error: "Failed to fetch return tracking" });
+    }
+  });
+
   app.post("/api/admin/products", verifyAdmin, async (req, res) => {
     try {
       const validated = insertProductSchema.parse(req.body);

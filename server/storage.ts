@@ -9,6 +9,7 @@ import {
   orderItems,
   deliveryTracking,
   returns,
+  returnTracking,
   type User,
   type InsertUser,
   type Product,
@@ -25,6 +26,8 @@ import {
   type InsertDeliveryTracking,
   type Return,
   type InsertReturn,
+  type ReturnTracking,
+  type InsertReturnTracking,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -63,6 +66,9 @@ export interface IStorage {
   getReturns(userId: string): Promise<any[]>;
   getAllReturns(): Promise<any[]>;
   updateReturn(id: string, data: Partial<InsertReturn>): Promise<Return | undefined>;
+  updateReturnStatus(returnId: string, returnStatus: string): Promise<void>;
+  addReturnTracking(tracking: InsertReturnTracking): Promise<ReturnTracking>;
+  getReturnTracking(returnId: string): Promise<ReturnTracking[]>;
   
   getStats(): Promise<any>;
 }
@@ -302,6 +308,27 @@ export class DatabaseStorage implements IStorage {
       .where(eq(returns.id, id))
       .returning();
     return updatedReturn || undefined;
+  }
+
+  async updateReturnStatus(returnId: string, returnStatus: string): Promise<void> {
+    await db
+      .update(returns)
+      .set({ returnStatus, updatedAt: new Date() })
+      .where(eq(returns.id, returnId));
+  }
+
+  async addReturnTracking(tracking: InsertReturnTracking): Promise<ReturnTracking> {
+    const [newTracking] = await db.insert(returnTracking).values(tracking).returning();
+    return newTracking;
+  }
+
+  async getReturnTracking(returnId: string): Promise<ReturnTracking[]> {
+    const tracking = await db
+      .select()
+      .from(returnTracking)
+      .where(eq(returnTracking.returnId, returnId))
+      .orderBy(returnTracking.timestamp);
+    return tracking;
   }
 
   async getStats(): Promise<any> {

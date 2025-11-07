@@ -498,6 +498,19 @@ function ReturnsManagement() {
     },
   });
 
+  const updateReturnTrackingMutation = useMutation({
+    mutationFn: ({ returnId, status, location, message }: any) =>
+      adminRequest("POST", `/api/admin/returns/${returnId}/tracking`, {
+        status,
+        location,
+        message,
+      }),
+    onSuccess: () => {
+      refetch();
+      toast({ title: "Return tracking updated" });
+    },
+  });
+
   const handleApprove = (returnId: string) => {
     updateReturnMutation.mutate({
       id: returnId,
@@ -534,21 +547,22 @@ function ReturnsManagement() {
               <TableHead>Reason</TableHead>
               <TableHead>Requested</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Return Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {returns.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   No return requests found
                 </TableCell>
               </TableRow>
             ) : (
-              returns.map((returnRequest) => (
+              returns.map((returnRequest: any) => (
                 <TableRow key={returnRequest.id}>
                   <TableCell className="font-medium">
-                    {returnRequest.orderNumber}
+                    {returnRequest.order?.orderNumber}
                   </TableCell>
                   <TableCell className="max-w-xs truncate">
                     {returnRequest.reason}
@@ -562,28 +576,42 @@ function ReturnsManagement() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {returnRequest.status === "pending" && (
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleApprove(returnRequest.id)}
-                          disabled={updateReturnMutation.isPending}
-                          data-testid={`button-approve-return-${returnRequest.id}`}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleReject(returnRequest.id)}
-                          disabled={updateReturnMutation.isPending}
-                          data-testid={`button-reject-return-${returnRequest.id}`}
-                        >
-                          Reject
-                        </Button>
-                      </div>
-                    )}
+                    <Badge variant="secondary" className="capitalize">
+                      {returnRequest.returnStatus?.replace(/_/g, " ")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      {returnRequest.status === "pending" && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleApprove(returnRequest.id)}
+                            disabled={updateReturnMutation.isPending}
+                            data-testid={`button-approve-return-${returnRequest.id}`}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReject(returnRequest.id)}
+                            disabled={updateReturnMutation.isPending}
+                            data-testid={`button-reject-return-${returnRequest.id}`}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      {returnRequest.status === "approved" && (
+                        <ReturnStatusUpdater
+                          returnId={returnRequest.id}
+                          currentStatus={returnRequest.returnStatus}
+                          onUpdate={updateReturnTrackingMutation.mutate}
+                        />
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -663,6 +691,85 @@ function DeliveryStatusUpdater({
             />
           </div>
           <Button type="submit" className="w-full" data-testid="button-submit-status">
+            Update
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReturnStatusUpdater({
+  returnId,
+  currentStatus,
+  onUpdate,
+}: {
+  returnId: string;
+  currentStatus: string;
+  onUpdate: (data: any) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [status, setStatus] = useState(currentStatus);
+  const [location, setLocation] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdate({ returnId, status, location, message });
+    setIsOpen(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" data-testid={`button-update-return-status-${returnId}`}>
+          Update Tracking
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Update Return Tracking</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label>Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger data-testid="select-return-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="requested">Requested</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="pickup_scheduled">Pickup Scheduled</SelectItem>
+                <SelectItem value="picked_up">Picked Up</SelectItem>
+                <SelectItem value="in_transit">In Transit</SelectItem>
+                <SelectItem value="received_at_warehouse">Received at Warehouse</SelectItem>
+                <SelectItem value="inspecting">Inspecting</SelectItem>
+                <SelectItem value="refund_processing">Refund Processing</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Location (optional)</Label>
+            <Input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g., Warehouse, Lucknow"
+              data-testid="input-return-location"
+            />
+          </div>
+          <div>
+            <Label>Message</Label>
+            <Textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Return status update message"
+              required
+              data-testid="input-return-message"
+            />
+          </div>
+          <Button type="submit" className="w-full" data-testid="button-submit-return-status">
             Update
           </Button>
         </form>
