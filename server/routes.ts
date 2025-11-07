@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
-import { insertProductSchema, insertCartItemSchema, insertWishlistItemSchema, insertOrderSchema } from "@shared/schema";
+import { insertProductSchema, insertCartItemSchema, insertWishlistItemSchema, insertOrderSchema, insertCouponSchema } from "@shared/schema";
 import { z } from "zod";
 import { Cashfree, CFEnvironment } from "cashfree-pg";
 
@@ -391,6 +391,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Return requests routes
+  // Validate coupon
+  app.post("/api/coupons/validate", async (req, res) => {
+    try {
+      const { code, orderTotal } = req.body;
+      
+      if (!code || typeof orderTotal !== "number") {
+        return res.status(400).json({ error: "Invalid request" });
+      }
+
+      const coupon = await storage.getCouponByCode(code.toUpperCase());
+      
+      if (!coupon) {
+        return res.status(404).json({ error: "Coupon not found" });
+      }
+
+      if (!coupon.isActive) {
+        return res.status(400).json({ error: "Coupon is no longer active" });
+      }
+
+      if (coupon.usageLimit !== null && coupon.usedCount >= coupon.usageLimit) {
+        return res.status(400).json({ error: "Coupon usage limit reached" });
+      }
+
+      if (Number(coupon.minOrderValue) > orderTotal) {
+        return res.status(400).json({ 
+          error: `Minimum order value of ₹${Number(coupon.minOrderValue).toFixed(2)} required` 
+        });
+      }
+
+      let discountAmount = 0;
+      if (coupon.discountType === "percentage") {
+        discountAmount = (orderTotal * Number(coupon.discountValue)) / 100;
+      } else if (coupon.discountType === "fixed") {
+        discountAmount = Number(coupon.discountValue);
+      }
+
+      res.json({
+        id: coupon.id,
+        code: coupon.code,
+        discountType: coupon.discountType,
+        discountValue: Number(coupon.discountValue),
+        discountAmount,
+        minOrderValue: Number(coupon.minOrderValue),
+        isPublic: coupon.isPublic,
+      });
+    } catch (error) {
+      console.error("Validate coupon error:", error);
+      res.status(500).json({ error: "Failed to validate coupon" });
+    }
+  });
+
+  // Get public coupons (for display to users)
+  app.get("/api/coupons/public", async (req, res) => {
+    try {
+      const allCoupons = await storage.getCoupons();
+      const publicCoupons = allCoupons.filter(c => c.isPublic && c.isActive);
+      res.json(publicCoupons);
+    } catch (error) {
+      console.error("Get public coupons error:", error);
+      res.status(500).json({ error: "Failed to fetch coupons" });
+    }
+  });
+
   app.post("/api/returns", verifyFirebaseToken, async (req, res) => {
     try {
       const userId = req.userId!;
@@ -893,6 +956,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get return tracking error:", error);
       res.status(500).json({ error: "Failed to fetch return tracking" });
+    }
+  });
+
+  // Admin coupon management
+  app.get("/api/admin/coupons", verifyAdmin, async (req, res) => {
+    try {
+      const coupons = await storage.getCoupons();
+      res.json(coupons);
+    } catch (error) {
+      console.error("Get coupons error:", error);
+      res.status(500).json({ error: "Failed to fetch coupons" });
+    }
+  });
+
+  app.post("/api/admin/coupons", verifyAdmin, async (req, res) => {
+    try {
+      const validated = insertCouponSchema.parse(req.body);
+      const coupon = await storage.createCoupon(validated);
+      res.json(coupon);
+    } catch (error) {
+      console.error("Create coupon error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create coupon" });
+    }
+  });
+
+  app.patch("/api/admin/coupons/:id", verifyAdmin, async (req, res) => {
+    try {
+      const coupon = await storage.updateCoupon(req.params.id, req.body);
+      if (!coupon) {
+        return res.status(404).json({ error: "Coupon not found" });
+      }
+      res.json(coupon);
+    } catch (error) {
+      console.error("Update coupon error:", error);
+      res.status(500).json({ error: "Failed to update coupon" });
+    }
+  });
+
+  app.delete("/api/admin/coupons/:id", verifyAdmin, async (req, res) => {
+    try {
+      await storage.deleteCoupon(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete coupon error:", error);
+      res.status(500).json({ error: "Failed to delete coupon" });
     }
   });
 
