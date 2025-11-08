@@ -63,7 +63,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <Leaf className="h-5 w-5" />
-              <span>100% Natural ingredients</span>
+              <span>100% Natural ingredients With No Preservatives</span>
             </div>
           </div>
         </div>
