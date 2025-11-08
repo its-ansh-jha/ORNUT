@@ -14,7 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle2, Circle, Package, RotateCcw, Search } from "lucide-react";
+import { CheckCircle2, Circle, Package, RotateCcw, Search, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format, differenceInDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
@@ -517,7 +518,13 @@ export default function TrackOrder() {
               Please provide a reason for your return request. Our team will review and get back to you shortly.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-4 space-y-4">
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Important:</strong> Opened packages cannot be returned. Only sealed, unopened items in their original packaging are eligible for return.
+              </AlertDescription>
+            </Alert>
             <Textarea
               placeholder="Reason for return..."
               value={returnReason}
