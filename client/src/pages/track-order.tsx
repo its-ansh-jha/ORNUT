@@ -67,8 +67,11 @@ export default function TrackOrder() {
 
   const returnMutation = useMutation({
     mutationFn: async (reason: string) => {
-      const orderToReturn = order || publicTrackingData?.order;
-      return apiRequest("POST", "/api/returns", { orderId: orderToReturn.id, reason });
+      // SECURITY: Only allow returns for authenticated user's own orders
+      if (!order || !user) {
+        throw new Error("Unauthorized: Can only return your own orders");
+      }
+      return apiRequest("POST", "/api/returns", { orderId: order.id, reason });
     },
     onSuccess: () => {
       toast({
@@ -210,7 +213,9 @@ export default function TrackOrder() {
   // Check if return already exists for this order
   const hasExistingReturn = existingReturns.some((r: any) => r.orderId === displayOrder?.id);
   
-  const canRequestReturn = user && displayOrder.deliveryStatus === "delivered" && daysElapsed !== null && daysElapsed <= 5 && !hasExistingReturn;
+  // SECURITY: Only allow return requests if the order belongs to the authenticated user
+  const orderBelongsToUser = user && displayOrder.userId === user.uid;
+  const canRequestReturn = orderBelongsToUser && displayOrder.deliveryStatus === "delivered" && daysElapsed !== null && daysElapsed <= 5 && !hasExistingReturn;
   const isPublicTracking = !user && searchedOrderNumber;
 
   return (
