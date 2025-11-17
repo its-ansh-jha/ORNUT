@@ -207,7 +207,7 @@ function ProductCard({ product }: { product: Product }) {
 
   return (
     <Card className="overflow-hidden hover-elevate cursor-pointer group" data-testid={`card-product-${product.id}`}>
-      <Link href={`/product/${product.id}`}>
+      <Link href={`/product/${product.slug || product.id}`}>
         <div className="relative aspect-square overflow-hidden">
           <img
             src={product.image}
@@ -228,7 +228,7 @@ function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
       <CardContent className="p-6">
-        <Link href={`/product/${product.id}`}>
+        <Link href={`/product/${product.slug || product.id}`}>
           <h3 className="font-semibold text-xl mb-2" data-testid={`text-product-name-${product.id}`}>
             {product.name}
           </h3>

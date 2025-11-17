@@ -90,7 +90,7 @@ export default function Wishlist() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {wishlistItems.map((item) => (
           <Card key={item.id} className="overflow-hidden" data-testid={`card-wishlist-item-${item.id}`}>
-            <Link href={`/product/${item.product.id}`}>
+            <Link href={`/product/${item.product.slug || item.product.id}`}>
               <div className="aspect-square overflow-hidden">
                 <img
                   src={item.product.image}
