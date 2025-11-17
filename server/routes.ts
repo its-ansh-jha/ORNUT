@@ -132,9 +132,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/products/:id", async (req, res) => {
+  app.get("/api/products/:idOrSlug", async (req, res) => {
     try {
-      const product = await storage.getProduct(req.params.id);
+      const { idOrSlug } = req.params;
+      
+      // Try to find by slug first (SEO-friendly), then by ID (backward compatibility)
+      let product = await storage.getProductBySlug(idOrSlug);
+      if (!product) {
+        product = await storage.getProduct(idOrSlug);
+      }
+      
       if (!product) {
         return res.status(404).json({ error: "Product not found" });
       }

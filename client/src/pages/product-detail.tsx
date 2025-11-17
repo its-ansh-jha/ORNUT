@@ -148,7 +148,7 @@ export default function ProductDetail() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setQuantity(quantity + 1)}
+                onClick={() => setQuantity(quantity + 1))}
                 data-testid="button-increase-quantity"
               >
                 <Plus className="h-4 w-4" />

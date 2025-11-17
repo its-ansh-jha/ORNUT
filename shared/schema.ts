@@ -17,12 +17,27 @@ export const users = pgTable("users", {
 export const products = pgTable("products", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
   description: text("description").notNull(),
+  shortDescription: text("short_description"),
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
   image: text("image").notNull(),
   category: text("category").notNull(),
   inStock: boolean("in_stock").default(true).notNull(),
   stockQuantity: integer("stock_quantity").default(0).notNull(),
+  // SEO fields
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  // Nutritional info
+  protein: text("protein"),
+  calories: text("calories"),
+  fat: text("fat"),
+  carbs: text("carbs"),
+  ingredients: text("ingredients"),
+  weight: text("weight"),
+  // Additional SEO features
+  features: text("features").array(),
+  benefits: text("benefits").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
