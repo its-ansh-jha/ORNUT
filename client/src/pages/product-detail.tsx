@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { Helmet } from "react-helmet-async";
 import { Product } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,15 +12,15 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ProductDetail() {
-  const [, params] = useRoute("/product/:id");
-  const productId = params?.id;
+  const [, params] = useRoute("/product/:slugOrId");
+  const slugOrId = params?.slugOrId;
   const [quantity, setQuantity] = useState(1);
   const { user } = useAuth();
   const { toast } = useToast();
 
   const { data: product, isLoading } = useQuery<Product>({
-    queryKey: ["/api/products", productId],
-    enabled: !!productId,
+    queryKey: ["/api/products", slugOrId],
+    enabled: !!slugOrId,
   });
 
   const { data: allProducts = [] } = useQuery<Product[]>({
@@ -33,7 +34,7 @@ export default function ProductDetail() {
 
   const addToCartMutation = useMutation({
     mutationFn: () =>
-      apiRequest("POST", "/api/cart", { productId, quantity }),
+      apiRequest("POST", "/api/cart", { productId: product?.id, quantity }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       toast({ title: "Added to cart!", description: `${quantity} item(s) added` });
@@ -42,12 +43,12 @@ export default function ProductDetail() {
 
   const toggleWishlistMutation = useMutation({
     mutationFn: () => {
-      const isInWishlist = wishlist.some((item: any) => item.productId === productId);
+      const isInWishlist = wishlist.some((item: any) => item.productId === product?.id);
       if (isInWishlist) {
-        const wishlistItem = wishlist.find((item: any) => item.productId === productId);
+        const wishlistItem = wishlist.find((item: any) => item.productId === product?.id);
         return apiRequest("DELETE", `/api/wishlist/${wishlistItem.id}`, {});
       }
-      return apiRequest("POST", "/api/wishlist", { productId });
+      return apiRequest("POST", "/api/wishlist", { productId: product?.id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/wishlist"] });
@@ -81,9 +82,9 @@ export default function ProductDetail() {
     );
   }
 
-  const isInWishlist = wishlist.some((item: any) => item.productId === productId);
+  const isInWishlist = wishlist.some((item: any) => item.productId === product?.id);
   const relatedProducts = allProducts
-    .filter((p) => p.id !== productId && p.category === product.category)
+    .filter((p) => p.id !== product?.id && p.category === product.category)
     .slice(0, 3);
 
   const handleAddToCart = () => {
@@ -102,14 +103,74 @@ export default function ProductDetail() {
     toggleWishlistMutation.mutate();
   };
 
+  // Generate SEO-optimized metadata
+  const pageTitle = `${product.metaTitle || product.name} | Ornut - Premium Peanut Butter`;
+  const metaDescription = product.metaDescription || `Buy ${product.name} online in India. ${product.description}. Free shipping on orders over ₹1200. 100% natural peanut butter made in India.`;
+  const productUrl = `https://ornut.com/product/${product.slug || product.id}`;
+
+  // Generate JSON-LD structured data for Google
+  const productStructuredData = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.image,
+    "description": product.description,
+    "sku": product.id,
+    "brand": {
+      "@type": "Brand",
+      "name": "Ornut"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": productUrl,
+      "priceCurrency": "INR",
+      "price": product.price,
+      "availability": product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "seller": {
+        "@type": "Organization",
+        "name": "Ornut"
+      }
+    }
+  };
+
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8">
-      <Link href="/products">
-        <Button variant="ghost" className="mb-6" data-testid="button-back">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Products
-        </Button>
-      </Link>
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <link rel="canonical" href={productUrl} />
+        
+        {/* Open Graph tags for social sharing */}
+        <meta property="og:type" content="product" />
+        <meta property="og:title" content={product.name} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:image" content={product.image} />
+        <meta property="og:url" content={productUrl} />
+        <meta property="og:site_name" content="Ornut" />
+        
+        {/* Product-specific Open Graph tags */}
+        <meta property="product:price:amount" content={String(product.price)} />
+        <meta property="product:price:currency" content="INR" />
+        
+        {/* Twitter Card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={product.name} />
+        <meta name="twitter:description" content={metaDescription} />
+        <meta name="twitter:image" content={product.image} />
+
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(productStructuredData)}
+        </script>
+      </Helmet>
+
+      <div className="container mx-auto max-w-7xl px-4 py-8">
+        <Link href="/products">
+          <Button variant="ghost" className="mb-6" data-testid="button-back">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Products
+          </Button>
+        </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
         <div className="aspect-square rounded-lg overflow-hidden">
@@ -148,7 +209,7 @@ export default function ProductDetail() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setQuantity(quantity + 1))}
+                onClick={() => setQuantity(quantity + 1)}
                 data-testid="button-increase-quantity"
               >
                 <Plus className="h-4 w-4" />
@@ -219,7 +280,7 @@ export default function ProductDetail() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {relatedProducts.map((relatedProduct) => (
               <Card key={relatedProduct.id} className="overflow-hidden hover-elevate">
-                <Link href={`/product/${relatedProduct.id}`}>
+                <Link href={`/product/${relatedProduct.slug || relatedProduct.id}`}>
                   <div className="aspect-square overflow-hidden">
                     <img
                       src={relatedProduct.image}
@@ -239,6 +300,7 @@ export default function ProductDetail() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
