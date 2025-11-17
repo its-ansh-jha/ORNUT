@@ -15,6 +15,7 @@ const pendingPaymentSessions = new Map<string, {
   shippingAddress: any;
   contactDetails: any;
   cartItems: any[];
+  couponId?: string;
   createdAt: number;
 }>();
 

@@ -16,23 +16,23 @@ export function Footer() {
             <h4 className="font-semibold mb-4">Shop</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/products">
-                  <a className="text-muted-foreground hover:text-foreground">All Products</a>
+                <Link href="/products" className="text-muted-foreground hover:text-foreground">
+                  All Products
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=creamy">
-                  <a className="text-muted-foreground hover:text-foreground">Creamy</a>
+                <Link href="/products?category=creamy" className="text-muted-foreground hover:text-foreground">
+                  Creamy
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=crunchy">
-                  <a className="text-muted-foreground hover:text-foreground">Crunchy</a>
+                <Link href="/products?category=crunchy" className="text-muted-foreground hover:text-foreground">
+                  Crunchy
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=specialty">
-                  <a className="text-muted-foreground hover:text-foreground">Specialty</a>
+                <Link href="/products?category=specialty" className="text-muted-foreground hover:text-foreground">
+                  Specialty
                 </Link>
               </li>
             </ul>
@@ -41,23 +41,23 @@ export function Footer() {
             <h4 className="font-semibold mb-4">Support</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/faq">
-                  <a className="text-muted-foreground hover:text-foreground">FAQ</a>
+                <Link href="/faq" className="text-muted-foreground hover:text-foreground">
+                  FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/track-order">
-                  <a className="text-muted-foreground hover:text-foreground">Track Order</a>
+                <Link href="/track-order" className="text-muted-foreground hover:text-foreground">
+                  Track Order
                 </Link>
               </li>
               <li>
-                <Link href="/contact">
-                  <a className="text-muted-foreground hover:text-foreground">Contact Us</a>
+                <Link href="/contact" className="text-muted-foreground hover:text-foreground">
+                  Contact Us
                 </Link>
               </li>
               <li>
-                <Link href="/about">
-                  <a className="text-muted-foreground hover:text-foreground">About Us</a>
+                <Link href="/about" className="text-muted-foreground hover:text-foreground">
+                  About Us
                 </Link>
               </li>
             </ul>
