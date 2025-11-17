@@ -19,7 +19,7 @@ export default function ProductDetail() {
   const { toast } = useToast();
 
   const { data: product, isLoading } = useQuery<Product>({
-    queryKey: ["/api/products", slugOrId],
+    queryKey: [`/api/products/${slugOrId}`],
     enabled: !!slugOrId,
   });
 
@@ -42,17 +42,19 @@ export default function ProductDetail() {
   });
 
   const toggleWishlistMutation = useMutation({
-    mutationFn: () => {
-      const isInWishlist = wishlist.some((item: any) => item.productId === product?.id);
-      if (isInWishlist) {
+    mutationFn: async () => {
+      const currentlyInWishlist = wishlist.some((item: any) => item.productId === product?.id);
+      if (currentlyInWishlist) {
         const wishlistItem = wishlist.find((item: any) => item.productId === product?.id);
-        return apiRequest("DELETE", `/api/wishlist/${wishlistItem.id}`, {});
+        await apiRequest("DELETE", `/api/wishlist/${wishlistItem.id}`, {});
+        return { action: 'remove' as const };
       }
-      return apiRequest("POST", "/api/wishlist", { productId: product?.id });
+      await apiRequest("POST", "/api/wishlist", { productId: product?.id });
+      return { action: 'add' as const };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/wishlist"] });
-      toast({ title: isInWishlist ? "Removed from wishlist" : "Added to wishlist!" });
+      toast({ title: data.action === 'remove' ? "Removed from wishlist" : "Added to wishlist!" });
     },
   });
 

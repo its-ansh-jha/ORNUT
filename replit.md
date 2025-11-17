@@ -7,7 +7,7 @@ This project is a full-featured, production-ready e-commerce platform for Ornut,
 I prefer detailed explanations and clear communication. I want the agent to follow an iterative development process, making small, testable changes. Please ask for my approval before implementing any major architectural changes or feature additions. Do not make changes to the `server/storage.ts` or `server/db.ts` files without explicit instruction.
 
 ## System Architecture
-The platform is built with a modern web stack: React, TypeScript, Tailwind CSS, and Shadcn UI for the frontend, and Express.js with PostgreSQL and Drizzle ORM for the backend. Firebase handles user authentication (Google Sign-in), while Cashfree is integrated for secure payments. Formspree is used for email notifications. State management on the frontend is managed by TanStack Query.
+The platform is built with a modern web stack: React, TypeScript, Tailwind CSS, and Shadcn UI for the frontend, and Express.js with PostgreSQL and Drizzle ORM for the backend. Firebase handles user authentication (Google Sign-in), while Cashfree is integrated for secure payments. Formspree is used for email notifications. State management on the frontend is managed by TanStack Query. The site implements comprehensive SEO with react-helmet-async for meta tags and JSON-LD structured data.
 
 ### UI/UX Decisions
 The design adheres to a warm brown and cream color scheme, directly inspired by the Ornut brand and its squirrel logo. This palette is consistently applied across the UI, including a custom theme for Shadcn UI components. Typography uses Inter for all text, and spacing follows a consistent unit system (4, 6, 8, 12, 16, 24 units). The platform supports dark mode and is fully responsive. The logo is prominently featured in the navigation bar.
@@ -18,9 +18,10 @@ The design adheres to a warm brown and cream color scheme, directly inspired by 
 - **Order Management**: Comprehensive order tracking with delivery status updates (Order Placed, Processing, Shipped, In Transit, Out for Delivery, Delivered) and a 5-day return window.
 - **Coupon System**: An admin-managed coupon system supports percentage or fixed-amount discounts, usage limits, minimum order values, and public/private visibility. Discounts are applied at checkout, and usage is tracked after successful payment.
 - **Admin Panel**: A secure, password-protected dashboard for managing products, orders, returns, and coupons, including the ability to update delivery and return tracking.
-- **Database Schema**: A PostgreSQL database manages `users`, `products`, `cartItems`, `wishlistItems`, `orders`, `orderItems`, `deliveryTracking`, `returns`, `returnTracking`, and `coupons`.
-- **API Endpoints**: A well-defined set of RESTful APIs for authentication sync, product management, cart and wishlist operations, order creation and listing, return management, coupon validation, and all admin functionalities.
+- **Database Schema**: A PostgreSQL database manages `users`, `products`, `cartItems`, `wishlistItems`, `orders`, `orderItems`, `deliveryTracking`, `returns`, `returnTracking`, and `coupons`. Products include SEO-optimized fields (slug, metaTitle, metaDescription, nutritional data).
+- **API Endpoints**: A well-defined set of RESTful APIs for authentication sync, product management (supporting both UUID and slug-based access), cart and wishlist operations, order creation and listing, return management, coupon validation, and all admin functionalities.
 - **Email Notifications**: Order confirmation and payment success/failure emails are sent via Formspree.
+- **SEO Implementation**: Comprehensive search engine optimization with SEO-friendly URLs using product slugs (e.g., `/product/natural-honey-peanut-butter-350g`), dynamic meta tags using react-helmet-async, Open Graph and Twitter Card tags for social sharing, JSON-LD structured data for Product and Organization schemas, and keyword-optimized content targeting high-opportunity search terms like "high protein peanut butter India", "natural peanut butter", "gluten-free", and "made in India".
 
 ### System Design Choices
 - **Security**: Robust security measures include Firebase ID token verification, user ownership checks, and a secure admin authentication flow. Payment order creation and verification are handled server-side.
