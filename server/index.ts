@@ -1,8 +1,14 @@
+// IMPORTANT: Load environment variables FIRST before any other imports
+// This must be the very first import to ensure .env is loaded in production (EC2)
+import { validateEnv } from "./env";
+
+// Validate and load environment variables immediately
+validateEnv();
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
-import { validateEnv } from "./env";
 
 const app = express();
 
@@ -52,9 +58,6 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Validate environment variables on startup
-  validateEnv();
-  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
