@@ -1,10 +1,3 @@
-// IMPORTANT: Load environment variables FIRST before any other imports
-// This must be the very first import to ensure .env is loaded in production (EC2)
-import { validateEnv } from "./env";
-
-// Validate and load environment variables immediately
-validateEnv();
-
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
