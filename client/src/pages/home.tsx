@@ -111,6 +111,10 @@ export default function Home() {
               <Leaf className="h-5 w-5" />
               <span>100% Natural ingredients</span>
             </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              <span>No Preservatives</span>
+            </div>
           </div>
         </div>
       </section>
