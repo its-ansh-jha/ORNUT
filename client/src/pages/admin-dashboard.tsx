@@ -285,17 +285,35 @@ function ProductForm({ product, onSuccess }: { product?: any; onSuccess: () => v
     inStock: product?.inStock ?? true,
   });
 
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
   const saveMutation = useMutation({
     mutationFn: (data: any) => {
+      const dataWithSlug = {
+        ...data,
+        slug: product?.slug || generateSlug(data.name),
+      };
       if (product) {
-        return adminRequest("PATCH", `/api/admin/products/${product.id}`, data);
+        return adminRequest("PATCH", `/api/admin/products/${product.id}`, dataWithSlug);
       }
-      return adminRequest("POST", "/api/admin/products", data);
+      return adminRequest("POST", "/api/admin/products", dataWithSlug);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({ title: product ? "Product updated" : "Product created" });
       onSuccess();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to save product",
+        variant: "destructive"
+      });
     },
   });
 
