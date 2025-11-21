@@ -1083,6 +1083,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Assistant chat endpoint
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const { chatWithAssistant } = await import("./gemini");
+      const { messages, image } = req.body;
+      
+      if (!messages || !Array.isArray(messages)) {
+        return res.status(400).json({ error: "Invalid request: messages array required" });
+      }
+
+      const result = await chatWithAssistant(messages, image);
+      res.json(result);
+    } catch (error) {
+      console.error("Chat error:", error);
+      res.status(500).json({ error: "Failed to process chat message" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

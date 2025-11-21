@@ -1,13 +1,14 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useMutation } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/lib/auth-context";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { AIAssistant } from "@/components/ai-assistant";
 import Home from "@/pages/home";
 import Products from "@/pages/products";
 import ProductDetail from "@/pages/product-detail";
@@ -24,8 +25,50 @@ import Contact from "@/pages/contact";
 import AdminLogin from "@/pages/admin-login";
 import AdminDashboard from "@/pages/admin-dashboard";
 import NotFound from "@/pages/not-found";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 function Router() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [location, navigate] = useLocation();
+  const isAdminPage = location.startsWith("/admin");
+
+  const addToCartMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      if (!user) {
+        throw new Error("Please sign in to add items to cart");
+      }
+      return apiRequest("POST", "/api/cart", { productId, quantity: 1 });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+      toast({
+        title: "Added to cart",
+        description: "Product added successfully!",
+      });
+    },
+    onError: (error: any) => {
+      if (error.message.includes("sign in")) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to add items to cart",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to add to cart",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const handleAddToCart = (productId: string) => {
+    addToCartMutation.mutate(productId);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -51,6 +94,7 @@ function Router() {
         </Switch>
       </main>
       <Footer />
+      {!isAdminPage && <AIAssistant onAddToCart={handleAddToCart} />}
     </div>
   );
 }
