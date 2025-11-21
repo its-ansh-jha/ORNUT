@@ -28,8 +28,8 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Ornut",
-    "url": "https://ornut.com",
-    "logo": "https://ornut.com/logo.png",
+    "url": "https://peanutproducts.in",
+    "logo": "https://peanutproducts.in/logo.png",
     "description": "Premium high protein peanut butter made in India with 100% natural ingredients. No preservatives, no added sugar.",
     "sameAs": [
       "https://www.facebook.com/ornut",
@@ -47,21 +47,21 @@ export default function Home() {
           content="Buy premium high protein peanut butter online in India. 100% natural, gluten-free, no preservatives. Made with roasted peanuts. Free shipping over ₹1200. Best natural peanut butter for fitness and health." 
         />
         <meta name="keywords" content="high protein peanut butter, natural peanut butter, peanut butter India, best peanut butter, gluten free peanut butter, healthy peanut butter, protein rich peanut butter, made in India, no preservatives" />
-        <link rel="canonical" href="https://ornut.com/" />
+        <link rel="canonical" href="https://peanutproducts.in/" />
         
         {/* Open Graph tags */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Ornut - Premium High Protein Peanut Butter Made in India" />
         <meta property="og:description" content="100% natural, high protein peanut butter. No preservatives, gluten-free. Made with premium roasted peanuts in India. Free shipping over ₹1200." />
-        <meta property="og:url" content="https://ornut.com/" />
+        <meta property="og:url" content="https://peanutproducts.in/" />
         <meta property="og:site_name" content="Ornut" />
-        <meta property="og:image" content="https://ornut.com/og-image.jpg" />
+        <meta property="og:image" content="https://peanutproducts.in/og-image.jpg" />
         
         {/* Twitter Card tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Ornut - Premium High Protein Peanut Butter" />
         <meta name="twitter:description" content="100% natural, high protein peanut butter made in India. No preservatives, gluten-free." />
-        <meta name="twitter:image" content="https://ornut.com/og-image.jpg" />
+        <meta name="twitter:image" content="https://peanutproducts.in/og-image.jpg" />
 
         {/* JSON-LD Structured Data */}
         <script type="application/ld+json">

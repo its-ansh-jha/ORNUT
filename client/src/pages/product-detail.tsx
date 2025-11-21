@@ -108,7 +108,7 @@ export default function ProductDetail() {
   // Generate SEO-optimized metadata
   const pageTitle = `${product.metaTitle || product.name} | Ornut - Premium Peanut Butter`;
   const metaDescription = product.metaDescription || `Buy ${product.name} online in India. ${product.description}. Free shipping on orders over ₹1200. 100% natural peanut butter made in India.`;
-  const productUrl = `https://ornut.com/product/${product.slug || product.id}`;
+  const productUrl = `https://peanutproducts.in/product/${product.slug || product.id}`;
 
   // Generate JSON-LD structured data for Google
   const productStructuredData = {

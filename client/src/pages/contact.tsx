@@ -145,7 +145,7 @@ export default function Contact() {
                     <Mail className="w-5 h-5 text-primary mt-1" />
                     <div>
                       <h3 className="font-semibold mb-1">Email</h3>
-                      <p className="text-muted-foreground">support@ornut.com</p>
+                      <p className="text-muted-foreground">support@peanutproducts.in</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
