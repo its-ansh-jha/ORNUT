@@ -29,9 +29,56 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 function Router() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/products" component={Products} />
+          <Route path="/product/:slugOrId" component={ProductDetail} />
+          <Route path="/cart" component={Cart} />
+          <Route path="/wishlist" component={Wishlist} />
+          <Route path="/checkout" component={Checkout} />
+          <Route path="/orders" component={Orders} />
+          <Route path="/orders/:id" component={TrackOrder} />
+          <Route path="/track-order" component={TrackOrder} />
+          <Route path="/returns" component={Returns} />
+          <Route path="/account" component={Account} />
+          <Route path="/faq" component={FAQ} />
+          <Route path="/about" component={About} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/admin/login" component={AdminLogin} />
+          <Route path="/admin/dashboard" component={AdminDashboard} />
+          <Route component={NotFound} />
+        </Switch>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <AppContent />
+            </TooltipProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
+  );
+}
+
+function AppContent() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [location, navigate] = useLocation();
+  const [location] = useLocation();
   const isAdminPage = location.startsWith("/admin");
 
   const addToCartMutation = useMutation({
@@ -70,48 +117,9 @@ function Router() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1">
-        <Switch>
-          <Route path="/" component={Home} />
-          <Route path="/products" component={Products} />
-          <Route path="/product/:slugOrId" component={ProductDetail} />
-          <Route path="/cart" component={Cart} />
-          <Route path="/wishlist" component={Wishlist} />
-          <Route path="/checkout" component={Checkout} />
-          <Route path="/orders" component={Orders} />
-          <Route path="/orders/:id" component={TrackOrder} />
-          <Route path="/track-order" component={TrackOrder} />
-          <Route path="/returns" component={Returns} />
-          <Route path="/account" component={Account} />
-          <Route path="/faq" component={FAQ} />
-          <Route path="/about" component={About} />
-          <Route path="/contact" component={Contact} />
-          <Route path="/admin/login" component={AdminLogin} />
-          <Route path="/admin/dashboard" component={AdminDashboard} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
-      <Footer />
+    <>
+      <Router />
       {!isAdminPage && <AIAssistant onAddToCart={handleAddToCart} />}
-    </div>
-  );
-}
-
-export default function App() {
-  return (
-    <HelmetProvider>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <AuthProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-            </TooltipProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </HelmetProvider>
+    </>
   );
 }
