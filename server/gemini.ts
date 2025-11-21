@@ -128,7 +128,7 @@ If analyzing an uploaded image, describe what you see and suggest relevant Ornut
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview",
+      model: "gemini-2.0-flash",
       config: {
         systemInstruction: systemPrompt,
         temperature: 0.9,
