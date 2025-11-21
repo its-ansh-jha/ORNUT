@@ -198,7 +198,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
   }, [isOpen]);
 
   const portalContent = (
-    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999, width: "384px", maxWidth: "90vw" }}>
+    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999, width: "384px", maxWidth: "calc(100vw - 48px)", pointerEvents: "auto" }}>
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
@@ -211,7 +211,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
       )}
 
       {isOpen && (
-        <Card className="w-full h-[600px] shadow-xl flex flex-col" style={{ maxHeight: "90vh" }}>
+        <Card className="w-full h-[600px] shadow-xl flex flex-col" style={{ maxHeight: "90vh", position: "absolute", bottom: "0", right: "0" }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
             <CardTitle className="text-lg font-semibold">Ornut Assistant</CardTitle>
             <Button
