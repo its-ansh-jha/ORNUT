@@ -64,11 +64,11 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
       parts: [],
     };
 
-    if (uploadedImage) {
-      userMessage.parts.push({ inlineData: uploadedImage });
-    }
     if (input.trim()) {
       userMessage.parts.push({ text: input });
+    }
+    if (uploadedImage) {
+      userMessage.parts.push({ inlineData: uploadedImage });
     }
 
     const newMessages = [...messages, userMessage];
@@ -133,7 +133,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
   }, [isOpen]);
 
   const portalContent = (
-    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999 }}>
+    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999, width: "384px", maxWidth: "90vw" }}>
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
@@ -146,7 +146,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
       )}
 
       {isOpen && (
-        <Card className="w-96 h-[600px] shadow-xl flex flex-col">
+        <Card className="w-full h-[600px] shadow-xl flex flex-col" style={{ maxHeight: "90vh" }}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
             <CardTitle className="text-lg font-semibold">Ornut Assistant</CardTitle>
             <Button
