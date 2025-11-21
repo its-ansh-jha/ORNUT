@@ -4,7 +4,7 @@ Disallow: /admin/
 Disallow: /api/
 
 # Sitemaps
-Sitemap: https://ornut.com/sitemap.xml
+Sitemap: https://peanutproducts.in/sitemap.xml
 
 # Crawl delay (in seconds)
 Crawl-delay: 1
