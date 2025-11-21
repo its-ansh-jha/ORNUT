@@ -109,7 +109,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <Leaf className="h-5 w-5" />
-              <span>100% Natural ingredients With No Preservatives</span>
+              <span>100% Natural ingredients</span>
             </div>
           </div>
         </div>
@@ -165,8 +165,8 @@ export default function Home() {
             />
             <FeatureCard
               icon={<Leaf className="h-12 w-12 text-primary" />}
-              title="Sustainable"
-              description="Eco-friendly packaging and sustainable sourcing practices for a better planet."
+              title="No Preservatives"
+              description="100% free from preservatives, additives, and artificial ingredients. Pure and simple."
             />
             <FeatureCard
               icon={<CheckCircle className="h-12 w-12 text-primary" />}

@@ -26,7 +26,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
   const { toast } = useToast();
 
   const chatMutation = useMutation({
-    mutationFn: async (data: { messages: Message[]; image?: { mimeType: string; data: string } }) => {
+    mutationFn: async (data: { messages: Message[]; image?: { mimeType: string; data: string } }): Promise<{ response: string; products?: any[] }> => {
       return new Promise((resolve, reject) => {
         const response = fetch("/api/chat", {
           method: "POST",
