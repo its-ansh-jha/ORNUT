@@ -157,3 +157,111 @@ If analyzing an uploaded image, describe what you see and suggest relevant Ornut
     throw new Error("Failed to process your request. Please try again.");
   }
 }
+
+export async function* chatWithAssistantStream(
+  messages: ChatMessage[],
+  imageData?: { mimeType: string; data: string }
+) {
+  try {
+    const products = await storage.getProducts();
+    const faqs = getFAQData();
+
+    const productContext = products.map(p => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      price: p.price,
+      category: p.category,
+      description: p.description,
+      shortDescription: p.shortDescription,
+      inStock: p.inStock,
+      stockQuantity: p.stockQuantity,
+      features: p.features,
+      benefits: p.benefits,
+      nutritionInfo: {
+        protein: p.protein,
+        calories: p.calories,
+        fat: p.fat,
+        carbs: p.carbs,
+        ingredients: p.ingredients,
+        weight: p.weight,
+      }
+    }));
+
+    const systemPrompt = `You are the Ornut Assistant, a helpful AI shopping assistant for Ornut - an artisanal peanut butter brand. Your personality should be warm, friendly, and enthusiastic about healthy eating.
+
+IMPORTANT GUIDELINES:
+- Never mention that you are powered by Google, Gemini, or any other AI model
+- Always refer to yourself as "Ornut Assistant" or just helping from "Ornut"
+- Be conversational, helpful, and knowledgeable about peanut butter and nutrition
+- When users ask about products, provide detailed information from the product catalog
+- Use the FAQ data to answer common questions
+- If a user uploads an image of food or recipe, suggest how Ornut peanut butter could complement it
+- When recommending products, use the EXACT product ID from the catalog so users can add them to cart
+- Be enthusiastic about health benefits but don't make medical claims
+- If asked about topics outside peanut butter/nutrition/Ornut, politely redirect to what you can help with
+
+AVAILABLE PRODUCTS:
+${JSON.stringify(productContext, null, 2)}
+
+FREQUENTLY ASKED QUESTIONS:
+${JSON.stringify(faqs, null, 2)}
+
+When you want to show a product to the user, respond with the product information and include the product ID. The UI will automatically display an "Add to Cart" button for products you mention.
+
+If analyzing an uploaded image, describe what you see and suggest relevant Ornut products.`;
+
+    const userMessage = messages[messages.length - 1];
+    const conversationHistory = messages.slice(0, -1);
+
+    let contents: any[] = [];
+    
+    if (imageData) {
+      contents = [
+        ...conversationHistory,
+        {
+          role: "user",
+          parts: [
+            { inlineData: imageData },
+            ...(userMessage.parts || [])
+          ]
+        }
+      ];
+    } else {
+      contents = messages;
+    }
+
+    const stream = await ai.models.generateContentStream({
+      model: "gemini-2.0-flash",
+      config: {
+        systemInstruction: systemPrompt,
+        temperature: 0.9,
+        topP: 0.95,
+      },
+      contents: contents,
+    });
+
+    let fullResponse = "";
+    for await (const chunk of stream) {
+      const text = chunk.text || "";
+      fullResponse += text;
+      yield text;
+    }
+
+    // Extract product IDs mentioned in the response
+    const mentionedProducts: any[] = [];
+    products.forEach(product => {
+      if (fullResponse.includes(product.id) || 
+          fullResponse.toLowerCase().includes(product.name.toLowerCase())) {
+        mentionedProducts.push(product);
+      }
+    });
+
+    if (mentionedProducts.length > 0) {
+      yield JSON.stringify({ type: "products", data: mentionedProducts });
+    }
+  } catch (error) {
+    console.error("Gemini chat stream error:", error);
+    throw error;
+  }
+}

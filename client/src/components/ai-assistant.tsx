@@ -27,13 +27,78 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
 
   const chatMutation = useMutation({
     mutationFn: async (data: { messages: Message[]; image?: { mimeType: string; data: string } }) => {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+      return new Promise((resolve, reject) => {
+        const response = fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        response.then((res) => {
+          if (!res.ok) throw new Error("Failed to send message");
+          if (!res.body) throw new Error("No response body");
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let fullText = "";
+          let products: any[] = [];
+
+          const processStream = async () => {
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split("\n");
+
+                for (const line of lines) {
+                  if (line.startsWith("data: ")) {
+                    const data = line.slice(6).trim();
+                    if (data === "[DONE]") continue;
+                    if (!data) continue;
+
+                    try {
+                      const parsed = JSON.parse(data);
+                      if (parsed.chunk) {
+                        if (typeof parsed.chunk === "string") {
+                          if (parsed.chunk.startsWith('{"type":"products"')) {
+                            const productData = JSON.parse(parsed.chunk);
+                            products = productData.data;
+                          } else {
+                            fullText += parsed.chunk;
+                            setMessages((prev) => {
+                              const newMessages = [...prev];
+                              if (newMessages[newMessages.length - 1]?.role === "model") {
+                                newMessages[newMessages.length - 1] = {
+                                  ...newMessages[newMessages.length - 1],
+                                  parts: [{ text: fullText }],
+                                };
+                              }
+                              return newMessages;
+                            });
+                          }
+                        }
+                      }
+                    } catch (e) {
+                      // Continue on parse error
+                    }
+                  }
+                }
+              }
+
+              resolve({
+                response: fullText,
+                products: products.length > 0 ? products : undefined,
+              });
+            } catch (error) {
+              reject(error);
+            }
+          };
+
+          processStream();
+        }).catch(reject);
       });
-      if (!response.ok) throw new Error("Failed to send message");
-      return response.json();
     },
     onSuccess: (data: { response: string; products?: any[] }) => {
       setMessages((prev) => [

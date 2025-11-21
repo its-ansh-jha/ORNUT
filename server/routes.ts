@@ -1083,21 +1083,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Assistant chat endpoint
+  // AI Assistant chat endpoint (streaming)
   app.post("/api/chat", async (req, res) => {
     try {
-      const { chatWithAssistant } = await import("./gemini");
+      const { chatWithAssistantStream } = await import("./gemini");
       const { messages, image } = req.body;
       
       if (!messages || !Array.isArray(messages)) {
         return res.status(400).json({ error: "Invalid request: messages array required" });
       }
 
-      const result = await chatWithAssistant(messages, image);
-      res.json(result);
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      const stream = chatWithAssistantStream(messages, image);
+      
+      for await (const chunk of stream) {
+        res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+      }
+      
+      res.write("data: [DONE]\n\n");
+      res.end();
     } catch (error) {
       console.error("Chat error:", error);
-      res.status(500).json({ error: "Failed to process chat message" });
+      res.write(`data: ${JSON.stringify({ error: "Failed to process chat message" })}\n\n`);
+      res.end();
     }
   });
 
