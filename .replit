@@ -31,6 +31,10 @@ localPort = 36237
 externalPort = 5000
 
 [[ports]]
+localPort = 38475
+externalPort = 8000
+
+[[ports]]
 localPort = 43597
 externalPort = 6800
 
@@ -76,3 +80,4 @@ waitForPort = 5000
 
 [agent]
 integrations = ["firebase_barebones_javascript:1.0.0", "javascript_database:1.0.0", "javascript_gemini:1.0.0"]
+expertMode = true
