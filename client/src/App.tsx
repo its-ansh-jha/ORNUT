@@ -119,7 +119,7 @@ function AppContent() {
   return (
     <>
       <Router />
-      {!isAdminPage && <AIAssistant onAddToCart={handleAddToCart} />}
+      <AIAssistant onAddToCart={handleAddToCart} />
     </>
   );
 }
