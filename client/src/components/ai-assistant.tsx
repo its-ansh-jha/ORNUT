@@ -138,7 +138,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
         <Button
           onClick={() => setIsOpen(true)}
           size="icon"
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-[9999]"
           data-testid="button-open-chat"
         >
           <MessageCircle className="h-6 w-6" />
@@ -146,7 +146,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
       )}
 
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-xl z-50 flex flex-col">
+        <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-xl z-[9999] flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
             <CardTitle className="text-lg font-semibold">Ornut Assistant</CardTitle>
             <Button
