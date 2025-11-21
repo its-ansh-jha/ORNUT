@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -131,7 +132,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
     }
   }, [isOpen]);
 
-  return (
+  const portalContent = (
     <>
       {!isOpen && (
         <Button
@@ -303,4 +304,6 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
       )}
     </>
   );
+
+  return createPortal(portalContent, document.body);
 }
