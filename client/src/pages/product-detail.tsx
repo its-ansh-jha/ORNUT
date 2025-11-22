@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { Product } from "@shared/schema";
@@ -17,7 +17,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const { user } = useAuth();
   const { toast } = useToast();
-  const [, navigate] = useRoute("/cart");
+  const [, navigate] = useLocation();
 
   const { data: product, isLoading } = useQuery<Product>({
     queryKey: [`/api/products/${slugOrId}`],
