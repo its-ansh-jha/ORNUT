@@ -12,7 +12,7 @@ import { Footer } from "@/components/footer";
 import { AIAssistant } from "@/components/ai-assistant";
 import { Button } from "@/components/ui/button";
 import { NotificationPrompt } from "@/components/notification-prompt";
-import { registerServiceWorker, requestNotificationPermission, scheduleProductNotifications } from "@/lib/notifications";
+import { registerServiceWorker, requestNotificationPermission, initializeNotificationTimer } from "@/lib/notifications";
 import Home from "@/pages/home";
 import Products from "@/pages/products";
 import ProductDetail from "@/pages/product-detail";
@@ -95,8 +95,8 @@ function AppContent() {
       const hasPermission = await requestNotificationPermission();
       
       if (hasPermission) {
-        // Schedule notifications to be stored
-        await scheduleProductNotifications();
+        // Initialize notification timer with 16+ min intervals
+        initializeNotificationTimer();
       }
     };
 
