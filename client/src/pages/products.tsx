@@ -27,7 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Products() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const searchParams = new URLSearchParams(location.split("?")[1] || "");
   const initialSearch = searchParams.get("search") || "";
   const initialCategory = searchParams.get("category") || "";
@@ -54,7 +54,18 @@ export default function Products() {
       apiRequest("POST", "/api/cart", { productId, quantity: 1 }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-      toast({ title: "Added to cart!" });
+      toast({ 
+        title: "Added to cart!",
+        action: (
+          <Button 
+            size="sm" 
+            variant="default"
+            onClick={() => navigate("/cart")}
+          >
+            Go to Cart
+          </Button>
+        )
+      });
     },
   });
 

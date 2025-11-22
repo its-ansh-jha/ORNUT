@@ -17,6 +17,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useRoute("/cart");
 
   const { data: product, isLoading } = useQuery<Product>({
     queryKey: [`/api/products/${slugOrId}`],
@@ -37,7 +38,19 @@ export default function ProductDetail() {
       apiRequest("POST", "/api/cart", { productId: product?.id, quantity }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-      toast({ title: "Added to cart!", description: `${quantity} item(s) added` });
+      toast({ 
+        title: "Added to cart!", 
+        description: `${quantity} item(s) added`,
+        action: (
+          <Button 
+            size="sm" 
+            variant="default"
+            onClick={() => navigate("/cart")}
+          >
+            Go to Cart
+          </Button>
+        )
+      });
     },
   });
 

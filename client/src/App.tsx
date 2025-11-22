@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { AIAssistant } from "@/components/ai-assistant";
+import { Button } from "@/components/ui/button";
 import Home from "@/pages/home";
 import Products from "@/pages/products";
 import ProductDetail from "@/pages/product-detail";
@@ -78,7 +79,7 @@ export default function App() {
 function AppContent() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const isAdminPage = location.startsWith("/admin");
 
   const addToCartMutation = useMutation({
@@ -93,6 +94,15 @@ function AppContent() {
       toast({
         title: "Added to cart",
         description: "Product added successfully!",
+        action: (
+          <Button 
+            size="sm" 
+            variant="default"
+            onClick={() => navigate("/cart")}
+          >
+            Go to Cart
+          </Button>
+        )
       });
     },
     onError: (error: any) => {

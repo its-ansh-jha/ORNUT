@@ -217,6 +217,7 @@ export default function Home() {
 function ProductCard({ product }: { product: Product }) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const addToCartMutation = useMutation({
     mutationFn: () =>
@@ -229,6 +230,15 @@ function ProductCard({ product }: { product: Product }) {
       toast({
         title: "Added to cart",
         description: `${product.name} has been added to your cart`,
+        action: (
+          <Button 
+            size="sm" 
+            variant="default"
+            onClick={() => navigate("/cart")}
+          >
+            Go to Cart
+          </Button>
+        )
       });
     },
     onError: () => {
