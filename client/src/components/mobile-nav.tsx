@@ -25,17 +25,13 @@ export function MobileNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white dark:bg-slate-950 border-t border-border">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background border-t border-border">
       <div className="flex items-center justify-around h-16">
         {navItems.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href}>
             <Button
               variant={isActive(href) ? "default" : "ghost"}
-              className={`flex flex-col items-center gap-1 h-auto py-2 px-3 rounded-lg ${
-                isActive(href)
-                  ? "bg-[#037A3F] text-white"
-                  : "text-gray-600 dark:text-gray-400"
-              }`}
+              className={`flex flex-col items-center gap-1 h-auto py-2 px-3 rounded-lg`}
               data-testid={`mobile-nav-${label.toLowerCase()}`}
             >
               <Icon className="h-5 w-5" />

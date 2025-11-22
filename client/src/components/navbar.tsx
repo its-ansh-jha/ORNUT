@@ -48,54 +48,48 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-slate-950 shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" data-testid="link-home">
-            <div className="flex items-center gap-2 cursor-pointer hover-elevate rounded-md px-2 py-2">
+            <div className="flex items-center gap-3 cursor-pointer hover-elevate rounded-md px-3 py-2">
               <img 
                 src={logoImage} 
                 alt="Ornut Logo" 
-                className="h-10 w-10 rounded-full object-cover border-2 border-[#037A3F]"
+                className="h-10 w-10 rounded-full object-cover"
               />
-              <span className="hidden sm:inline font-bold text-lg text-[#037A3F]">ORNUT</span>
+              <span className="hidden sm:inline font-bold text-xl text-foreground">ORNUT</span>
             </div>
           </Link>
 
           {/* Desktop Search */}
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 name="search"
                 placeholder="Search products..."
-                className="pl-10 rounded-full bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-slate-700"
+                className="pl-10 rounded-full"
                 data-testid="input-search"
               />
             </div>
           </form>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-2">
             <Link href="/products">
-              <Button variant="ghost" className="text-[#037A3F] hover:bg-gray-100 dark:hover:bg-slate-800" data-testid="link-products">
-                Products
-              </Button>
+              <Button variant="ghost" data-testid="link-products">Products</Button>
             </Link>
             <Link href="/about">
-              <Button variant="ghost" className="text-[#037A3F] hover:bg-gray-100 dark:hover:bg-slate-800" data-testid="link-about">
-                About
-              </Button>
+              <Button variant="ghost" data-testid="link-about">About</Button>
             </Link>
             <Link href="/faq">
-              <Button variant="ghost" className="text-[#037A3F] hover:bg-gray-100 dark:hover:bg-slate-800" data-testid="link-faq">
-                FAQ
-              </Button>
+              <Button variant="ghost" data-testid="link-faq">FAQ</Button>
             </Link>
             <Link href="/admin/login">
-              <Button variant="ghost" className="text-[#037A3F] hover:bg-gray-100 dark:hover:bg-slate-800 gap-2" data-testid="link-admin">
+              <Button variant="ghost" className="gap-2" data-testid="link-admin">
                 <ShieldCheck className="h-4 w-4" />
                 Admin
               </Button>
@@ -103,14 +97,14 @@ export function Navbar() {
           </nav>
 
           {/* Right Side Icons */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             {/* Mobile Search Button */}
             {!mobileSearchOpen && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileSearchOpen(true)}
-                className="md:hidden text-[#037A3F] hover:bg-green-50 dark:hover:bg-slate-800"
+                className="md:hidden"
                 data-testid="button-mobile-search"
               >
                 <Search className="h-5 w-5" />
@@ -124,7 +118,7 @@ export function Navbar() {
                   type="search"
                   name="search"
                   placeholder="Search..."
-                  className="h-8 text-sm rounded-full bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-slate-700"
+                  className="h-8 text-sm rounded-full"
                   autoFocus
                   data-testid="input-search-mobile"
                 />
@@ -145,75 +139,54 @@ export function Navbar() {
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className={`transition-colors ${
-                theme === "light"
-                  ? "text-yellow-500 hover:bg-yellow-50 dark:hover:bg-slate-800"
-                  : "text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800"
-              }`}
+              className="transition-colors"
               data-testid="button-theme-toggle"
               title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
             >
               {theme === "light" ? (
-                <Moon className="h-5 w-5" />
+                <Moon className="h-5 w-5 text-yellow-500" />
               ) : (
-                <Sun className="h-5 w-5" />
+                <Sun className="h-5 w-5 text-blue-400" />
               )}
             </Button>
 
-            {/* Wishlist (Desktop & Tablet) */}
             {user && (
-              <Link href="/wishlist">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative hidden sm:flex text-[#037A3F] hover:bg-green-50 dark:hover:bg-slate-800"
-                  data-testid="button-wishlist"
-                >
-                  <Heart className="h-5 w-5" />
-                  {wishlistCount > 0 && (
-                    <Badge
-                      className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-[#9EEA01] text-[#037A3F]"
-                      data-testid="badge-wishlist-count"
-                    >
-                      {wishlistCount}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
+              <>
+                <Link href="/wishlist">
+                  <Button variant="ghost" size="icon" className="relative hidden sm:flex" data-testid="button-wishlist">
+                    <Heart className="h-5 w-5" />
+                    {wishlistCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 h-5 min-w-5 px-1 text-xs"
+                        data-testid="badge-wishlist-count"
+                      >
+                        {wishlistCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
+                <Link href="/cart">
+                  <Button variant="ghost" size="icon" className="relative" data-testid="button-cart">
+                    <ShoppingCart className="h-5 w-5" />
+                    {cartCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 h-5 min-w-5 px-1 text-xs"
+                        data-testid="badge-cart-count"
+                      >
+                        {cartCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
+              </>
             )}
 
-            {/* Cart Button */}
-            {user && (
-              <Link href="/cart">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative text-[#037A3F] hover:bg-green-50 dark:hover:bg-slate-800"
-                  data-testid="button-cart"
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  {cartCount > 0 && (
-                    <Badge
-                      className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-[#037A3F] text-white font-bold"
-                      data-testid="badge-cart-count"
-                    >
-                      {cartCount}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
-            )}
-
-            {/* User Menu */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hidden sm:flex text-[#037A3F] hover:bg-green-50 dark:hover:bg-slate-800"
-                    data-testid="button-user-menu"
-                  >
+                  <Button variant="ghost" size="icon" className="hidden sm:flex" data-testid="button-user-menu">
                     {user.photoURL ? (
                       <img
                         src={user.photoURL}
@@ -242,7 +215,7 @@ export function Navbar() {
               <Button 
                 onClick={signInWithGoogle}
                 disabled={signingIn}
-                className="hidden sm:inline-flex bg-[#037A3F] hover:bg-[#026a34] text-white rounded-full"
+                className="hidden sm:inline-flex"
                 data-testid="button-signin"
               >
                 {signingIn ? "Signing in..." : "Sign In"}
@@ -252,12 +225,7 @@ export function Navbar() {
             {/* Mobile Menu */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="md:hidden text-[#037A3F] hover:bg-green-50 dark:hover:bg-slate-800"
-                  data-testid="button-mobile-menu"
-                >
+                <Button variant="ghost" size="icon" className="md:hidden" data-testid="button-mobile-menu">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -266,14 +234,14 @@ export function Navbar() {
                   {user ? (
                     <>
                       <div className="mb-4 pb-4 border-b">
-                        <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                        <p className="text-sm font-semibold text-muted-foreground">
                           {user.displayName || user.email}
                         </p>
                       </div>
                       <Link href="/account" onClick={() => setMobileMenuOpen(false)}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-start text-[#037A3F]"
+                          className="w-full justify-start"
                           data-testid="link-account-mobile"
                         >
                           <User className="h-4 w-4 mr-2" />
@@ -283,7 +251,7 @@ export function Navbar() {
                       <Link href="/orders" onClick={() => setMobileMenuOpen(false)}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-start text-[#037A3F]"
+                          className="w-full justify-start"
                           data-testid="link-orders-mobile"
                         >
                           My Orders
@@ -295,7 +263,7 @@ export function Navbar() {
                           logout();
                           setMobileMenuOpen(false);
                         }}
-                        className="w-full justify-start text-red-600"
+                        className="w-full justify-start text-destructive"
                         data-testid="button-logout-mobile"
                       >
                         Logout
@@ -307,7 +275,7 @@ export function Navbar() {
                         signInWithGoogle();
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full bg-[#037A3F] hover:bg-[#026a34] text-white rounded-full"
+                      className="w-full"
                       data-testid="button-signin-mobile"
                     >
                       Sign In
