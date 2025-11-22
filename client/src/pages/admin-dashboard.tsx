@@ -370,7 +370,6 @@ function ProductForm({ product, onSuccess }: { product?: any; onSuccess: () => v
               <SelectItem value="smooth">Smooth</SelectItem>
               <SelectItem value="crunchy">Crunchy</SelectItem>
               <SelectItem value="chocolate">Chocolate</SelectItem>
-              <SelectItem value="specialty">Specialty</SelectItem>
             </SelectContent>
           </Select>
         </div>
