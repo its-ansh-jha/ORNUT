@@ -3,76 +3,73 @@ import { Facebook, Instagram, Twitter } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-[#037A3F] text-white mt-16">
+    <footer className="border-t bg-muted/30 mt-16">
       <div className="container mx-auto max-w-7xl px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="font-bold text-xl mb-4 text-[#9EEA01]">ORNUT</h3>
-            <p className="text-sm text-green-100 mb-2">
-              Premium high-protein peanut butter. 100% natural, lab-tested, made in India.
-            </p>
-            <p className="text-xs text-green-200 mt-4">
-              Email: support@peanutproducts.in
+            <h3 className="font-semibold text-lg mb-4">Ornut</h3>
+            <p className="text-sm text-muted-foreground">
+              A premium artisanal peanut butter company.
             </p>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-[#9EEA01]">Products</h4>
+            <h4 className="font-semibold mb-4">Shop</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/products" className="text-green-100 hover:text-[#9EEA01] transition-colors">
+                <Link href="/products" className="text-muted-foreground hover:text-foreground">
                   All Products
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=peanut-butter" className="text-green-100 hover:text-[#9EEA01] transition-colors">
-                  Peanut Butter
+                <Link href="/products?category=creamy" className="text-muted-foreground hover:text-foreground">
+                  Creamy
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=chocolate" className="text-green-100 hover:text-[#9EEA01] transition-colors">
-                  Chocolate
-                </Link>
-              </li>
-              <li>
-                <Link href="/products?category=crunchy" className="text-green-100 hover:text-[#9EEA01] transition-colors">
+                <Link href="/products?category=crunchy" className="text-muted-foreground hover:text-foreground">
                   Crunchy
+                </Link>
+              </li>
+              <li>
+                <Link href="/products?category=specialty" className="text-muted-foreground hover:text-foreground">
+                  Specialty
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-[#9EEA01]">Company</h4>
+            <h4 className="font-semibold mb-4">Support</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/about" className="text-green-100 hover:text-[#9EEA01] transition-colors">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="text-green-100 hover:text-[#9EEA01] transition-colors">
+                <Link href="/faq" className="text-muted-foreground hover:text-foreground">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-green-100 hover:text-[#9EEA01] transition-colors">
-                  Contact
+                <Link href="/track-order" className="text-muted-foreground hover:text-foreground">
+                  Track Order
                 </Link>
               </li>
               <li>
-                <Link href="/track-order" className="text-green-100 hover:text-[#9EEA01] transition-colors">
-                  Track Order
+                <Link href="/contact" className="text-muted-foreground hover:text-foreground">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="text-muted-foreground hover:text-foreground">
+                  About Us
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-[#9EEA01]">Connect</h4>
-            <div className="flex gap-4 mb-6">
+            <h4 className="font-semibold mb-4">Follow Us</h4>
+            <div className="flex gap-4">
               <a 
                 href="https://www.facebook.com/share/1Ck558bCLg/" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-green-100 hover:text-[#9EEA01] transition-colors" 
+                className="text-muted-foreground hover:text-primary" 
                 aria-label="Facebook"
                 data-testid="link-facebook"
               >
@@ -82,7 +79,7 @@ export function Footer() {
                 href="https://instagram.com/ornu_t" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-green-100 hover:text-[#9EEA01] transition-colors" 
+                className="text-muted-foreground hover:text-primary" 
                 aria-label="Instagram"
                 data-testid="link-instagram"
               >
@@ -92,20 +89,17 @@ export function Footer() {
                 href="https://twitter.com" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-green-100 hover:text-[#9EEA01] transition-colors" 
+                className="text-muted-foreground hover:text-primary" 
                 aria-label="Twitter"
                 data-testid="link-twitter"
               >
                 <Twitter className="h-5 w-5" />
               </a>
             </div>
-            <p className="text-xs text-green-200">
-              Join thousands enjoying premium peanut butter
-            </p>
           </div>
         </div>
-        <div className="border-t border-green-700 mt-8 pt-8 text-center text-sm text-green-200">
-          <p>&copy; {new Date().getFullYear()} Ornut. All rights reserved. Crafted with care.</p>
+        <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Ornut All rights reserved.</p>
         </div>
       </div>
     </footer>
