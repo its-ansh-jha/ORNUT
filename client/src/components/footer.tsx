@@ -65,13 +65,34 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Follow Us</h4>
             <div className="flex gap-4">
-              <a href="#" className="text-muted-foreground hover:text-primary" aria-label="Facebook">
+              <a 
+                href="https://www.facebook.com/share/1Ck558bCLg/" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary" 
+                aria-label="Facebook"
+                data-testid="link-facebook"
+              >
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary" aria-label="Instagram">
+              <a 
+                href="https://instagram.com/ornu_t" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary" 
+                aria-label="Instagram"
+                data-testid="link-instagram"
+              >
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary" aria-label="Twitter">
+              <a 
+                href="https://twitter.com" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary" 
+                aria-label="Twitter"
+                data-testid="link-twitter"
+              >
                 <Twitter className="h-5 w-5" />
               </a>
             </div>
