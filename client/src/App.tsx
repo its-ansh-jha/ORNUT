@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
+import { MobileNav } from "@/components/mobile-nav";
 import { Footer } from "@/components/footer";
 import { AIAssistant } from "@/components/ai-assistant";
 import { Button } from "@/components/ui/button";
@@ -30,8 +31,11 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 function Router() {
+  const [location] = useLocation();
+  const isAdminPage = location.startsWith("/admin");
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-16 md:pb-0">
       <Navbar />
       <main className="flex-1">
         <Switch>
@@ -54,6 +58,7 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
+      {!isAdminPage && <MobileNav />}
       <Footer />
     </div>
   );
