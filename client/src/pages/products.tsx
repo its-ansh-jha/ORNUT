@@ -63,15 +63,15 @@ export default function Products() {
 
       <div className="min-h-screen bg-white">
         {/* Hero Section */}
-        <section className="py-16 bg-gradient-to-r from-green-600 to-green-700 text-white">
+        <section className="py-16 bg-gradient-to-r from-[#037A3F] to-[#026a34] text-white">
           <div className="container mx-auto max-w-7xl px-4">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Products</h1>
-            <p className="text-lg text-green-100">Discover our full range of premium peanut butter products</p>
+            <p className="text-lg text-green-100">Discover our range of premium peanut butter products</p>
           </div>
         </section>
 
         {/* Filters Section */}
-        <section className="py-8 border-b">
+        <section className="py-8 border-b bg-gray-50">
           <div className="container mx-auto max-w-7xl px-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
@@ -80,13 +80,13 @@ export default function Products() {
                   placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 rounded-lg"
+                  className="pl-10 rounded-lg bg-white border-gray-200 focus:border-[#037A3F]"
                   data-testid="input-search-products"
                 />
               </div>
 
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger data-testid="select-category">
+                <SelectTrigger data-testid="select-category" className="rounded-lg">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -98,7 +98,7 @@ export default function Products() {
               </Select>
 
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger data-testid="select-sort">
+                <SelectTrigger data-testid="select-sort" className="rounded-lg">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -116,6 +116,7 @@ export default function Products() {
                   setCategory("all");
                   setSortBy("featured");
                 }}
+                className="border-[#037A3F] text-[#037A3F] hover:bg-[#037A3F] hover:text-white rounded-lg"
                 data-testid="button-reset-filters"
               >
                 Reset Filters
@@ -125,7 +126,7 @@ export default function Products() {
         </section>
 
         {/* Products Grid */}
-        <section className="py-16">
+        <section className="py-16 bg-white">
           <div className="container mx-auto max-w-7xl px-4">
             {isLoading ? (
               <div className="text-center py-12">Loading products...</div>
@@ -135,7 +136,7 @@ export default function Products() {
               </div>
             ) : (
               <>
-                <p className="text-gray-600 mb-8">Showing {filteredProducts.length} products</p>
+                <p className="text-gray-600 mb-8 font-medium">Showing {filteredProducts.length} products</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {filteredProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
@@ -170,7 +171,6 @@ function ProductCard({ product }: { product: Product }) {
         action: (
           <Button 
             size="sm" 
-            variant="default"
             onClick={() => navigate("/cart")}
             data-testid="button-go-to-cart"
           >
@@ -192,29 +192,29 @@ function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link href={`/product/${product.slug || product.id}`}>
-      <Card className="hover-elevate h-full cursor-pointer overflow-hidden" data-testid={`card-product-${product.id}`}>
+      <Card className="hover-elevate h-full cursor-pointer overflow-hidden border-0 shadow-sm" data-testid={`card-product-${product.id}`}>
         <div className="relative h-48 bg-gray-100 overflow-hidden">
           <img 
             src={product.image} 
             alt={product.name}
-            className="w-full h-full object-cover hover:scale-105 transition-transform"
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />
-          <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-            20% Off
+          <div className="absolute top-3 right-3 bg-[#9EEA01] text-[#037A3F] px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+            20% OFF
           </div>
         </div>
-        <CardContent className="pt-4 pb-4">
-          <h3 className="font-semibold text-lg mb-1 line-clamp-2">{product.name}</h3>
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+        <CardContent className="pt-6 pb-4">
+          <h3 className="font-semibold text-lg mb-2 text-gray-900 line-clamp-2">{product.name}</h3>
+          <p className="text-gray-600 text-sm mb-4 line-clamp-1">{product.description}</p>
           
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-2xl font-bold text-green-600">₹{Math.round((Number(product.price) || 0) * 0.8)}</span>
+            <span className="text-2xl font-bold text-[#037A3F]">₹{Math.round((Number(product.price) || 0) * 0.8)}</span>
             <span className="text-sm text-gray-500 line-through">₹{Number(product.price) || 0}</span>
           </div>
 
           <div className="flex items-center gap-1 mb-4">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+              <span key={i} className="text-[#9EEA01] text-sm">★</span>
             ))}
             <span className="text-xs text-gray-600 ml-1">(124)</span>
           </div>
@@ -225,7 +225,7 @@ function ProductCard({ product }: { product: Product }) {
               addToCartMutation.mutate();
             }}
             disabled={addToCartMutation.isPending}
-            className="w-full bg-green-600 hover:bg-green-700"
+            className="w-full bg-[#037A3F] hover:bg-[#026a34] text-white rounded-full font-semibold"
             data-testid={`button-add-to-cart-${product.id}`}
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
