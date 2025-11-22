@@ -202,7 +202,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
   const portalContent = (
     <div style={{ 
       position: "fixed", 
-      bottom: "24px", 
+      bottom: "100px", 
       right: "24px", 
       zIndex: 99999, 
       width: "384px", 
