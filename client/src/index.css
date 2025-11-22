@@ -354,4 +354,15 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+
+  /* AI Assistant responsive positioning */
+  .ai-assistant-container {
+    bottom: 100px; /* Above mobile navbar */
+  }
+
+  @media (min-width: 768px) {
+    .ai-assistant-container {
+      bottom: 24px; /* At bottom corner on desktop */
+    }
+  }
 }

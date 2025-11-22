@@ -200,9 +200,8 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
   }, [isOpen]);
 
   const portalContent = (
-    <div style={{ 
+    <div className="ai-assistant-container" style={{ 
       position: "fixed", 
-      bottom: "100px", 
       right: "24px", 
       zIndex: 99999, 
       width: "clamp(300px, 384px, calc(100vw - 48px))",
