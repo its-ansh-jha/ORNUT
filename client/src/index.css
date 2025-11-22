@@ -362,7 +362,8 @@
 
   @media (min-width: 768px) {
     .ai-assistant-container {
-      bottom: 24px; /* At bottom corner on desktop */
+      bottom: 24px; /* At bottom-right corner on desktop */
+      right: 24px;
     }
   }
 }

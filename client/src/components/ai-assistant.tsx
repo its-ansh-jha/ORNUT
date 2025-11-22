@@ -213,7 +213,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
         <Button
           onClick={() => setIsOpen(true)}
           size="icon"
-          className="h-14 w-14 rounded-full shadow-lg"
+          className="h-14 w-14 rounded-full shadow-lg ml-[300px] mr-[300px]"
           data-testid="button-open-chat"
         >
           <MessageCircle className="h-6 w-6" />
