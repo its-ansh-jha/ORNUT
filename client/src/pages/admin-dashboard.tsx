@@ -279,7 +279,7 @@ function ProductForm({ product, onSuccess }: { product?: any; onSuccess: () => v
     name: product?.name || "",
     description: product?.description || "",
     price: product?.price || "",
-    category: product?.category || "creamy",
+    category: product?.category || "smooth",
     image: product?.image || "",
     stockQuantity: product?.stockQuantity || 0,
     inStock: product?.inStock ?? true,
@@ -367,8 +367,9 @@ function ProductForm({ product, onSuccess }: { product?: any; onSuccess: () => v
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="creamy">Creamy</SelectItem>
+              <SelectItem value="smooth">Smooth</SelectItem>
               <SelectItem value="crunchy">Crunchy</SelectItem>
+              <SelectItem value="chocolate">Chocolate</SelectItem>
               <SelectItem value="specialty">Specialty</SelectItem>
             </SelectContent>
           </Select>
