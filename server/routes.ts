@@ -1046,17 +1046,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin product management
-  app.get("/api/admin/products", verifyAdmin, async (req, res) => {
-    try {
-      const products = await storage.getProducts();
-      res.json(products);
-    } catch (error) {
-      console.error("Get products error:", error);
-      res.status(500).json({ error: "Failed to fetch products" });
-    }
-  });
-
   app.post("/api/admin/products", verifyAdmin, async (req, res) => {
     try {
       const validated = insertProductSchema.parse(req.body);
@@ -1091,43 +1080,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete product error:", error);
       res.status(500).json({ error: "Failed to delete product" });
-    }
-  });
-
-  // Trigger notification endpoint
-  app.post("/api/admin/trigger-notification", verifyAdmin, async (req, res) => {
-    try {
-      const PRODUCT_NOTIFICATIONS = [
-        {
-          title: 'Peanut Butter Khana Hai!',
-          message: 'Fresh creamy peanut butter now available - 100% natural & delicious',
-        },
-        {
-          title: 'Chocolate wala Peanut Butter',
-          message: 'Taste me Yummy Hota haina - Premium chocolate peanut spread',
-        },
-        {
-          title: 'Crunchy Spread Alert!',
-          message: 'Love crunchy texture? Try our new crunchy peanut butter',
-        }
-      ];
-
-      // Pick a random notification
-      const randomNotification = PRODUCT_NOTIFICATIONS[Math.floor(Math.random() * PRODUCT_NOTIFICATIONS.length)];
-      
-      // Log that the admin triggered a notification
-      console.log(`Admin triggered notification: ${randomNotification.title}`);
-      
-      // Return the notification that was triggered
-      res.json({
-        success: true,
-        title: randomNotification.title,
-        message: randomNotification.message,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error("Trigger notification error:", error);
-      res.status(500).json({ error: "Failed to trigger notification" });
     }
   });
 

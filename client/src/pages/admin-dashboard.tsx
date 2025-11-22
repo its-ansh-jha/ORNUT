@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Package, ShoppingCart, DollarSign, Truck, Plus, Edit, Trash2, Tag, Bell } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, Truck, Plus, Edit, Trash2, Tag } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
@@ -89,9 +89,6 @@ export default function AdminDashboard() {
           <TabsTrigger value="coupons" data-testid="tab-coupons">
             Coupons
           </TabsTrigger>
-          <TabsTrigger value="notifications" data-testid="tab-notifications">
-            Notifications
-          </TabsTrigger>
         </TabsList>
         <TabsContent value="products">
           <ProductsManagement />
@@ -105,91 +102,15 @@ export default function AdminDashboard() {
         <TabsContent value="coupons">
           <CouponsManagement />
         </TabsContent>
-        <TabsContent value="notifications">
-          <NotificationManagement />
-        </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function NotificationManagement() {
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleTriggerNotification = async () => {
-    try {
-      setIsLoading(true);
-      const adminToken = sessionStorage.getItem("admin_password");
-      
-      const response = await fetch("/api/admin/trigger-notification", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-token": adminToken || "",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to trigger notification");
-      }
-
-      const data = await response.json();
-      toast({
-        title: "Notification Sent!",
-        description: `Sent: ${data.title}`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bell className="h-5 w-5" />
-          Send Notifications to Users
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Send a random promotional notification to all users who have enabled notifications.
-          </p>
-          <Button
-            onClick={handleTriggerNotification}
-            disabled={isLoading}
-            data-testid="button-trigger-notification"
-            className="w-full"
-          >
-            {isLoading ? "Sending..." : "Trigger Random Notification"}
-          </Button>
-        </div>
-
-        <div className="mt-6 p-4 bg-muted rounded-lg">
-          <h3 className="font-semibold mb-2">Available Messages:</h3>
-          <ul className="space-y-2 text-sm">
-            <li>Peanut Butter Khana Hai! - Fresh creamy peanut butter now available</li>
-            <li>Chocolate wala Peanut Butter - Premium chocolate peanut spread</li>
-            <li>Crunchy Spread Alert! - New crunchy peanut butter variety</li>
-          </ul>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 function DashboardStats() {
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<any>({
     queryKey: ["/api/admin/stats"],
-    queryFn: () => adminQueryFn({ queryKey: ["/api/admin/stats"] }),
+    queryFn: adminQueryFn,
   });
 
   return (
@@ -205,39 +126,36 @@ function DashboardStats() {
           </div>
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Revenue</CardTitle>
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold" data-testid="text-total-revenue">
-            ₹{(stats?.totalRevenue || 0).toLocaleString("en-IN")}
+          <div className="text-2xl font-bold" data-testid="text-revenue">
+            ₹{Number(stats?.revenue || 0).toFixed(2)}
           </div>
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+          <CardTitle className="text-sm font-medium">Products</CardTitle>
           <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold" data-testid="text-total-products">
+          <div className="text-2xl font-bold" data-testid="text-products-count">
             {stats?.totalProducts || 0}
           </div>
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+          <CardTitle className="text-sm font-medium">Pending Deliveries</CardTitle>
           <Truck className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold" data-testid="text-pending-orders">
-            {stats?.pendingOrders || 0}
+          <div className="text-2xl font-bold" data-testid="text-pending-deliveries">
+            {stats?.pendingDeliveries || 0}
           </div>
         </CardContent>
       </Card>
@@ -247,732 +165,1003 @@ function DashboardStats() {
 
 function ProductsManagement() {
   const { toast } = useToast();
-  const [isAddingProduct, setIsAddingProduct] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    stock: "",
-    category: "peanut-butter",
-    image: "",
-    slug: "",
-  });
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { data: products, isLoading } = useQuery({
-    queryKey: ["/api/admin/products"],
-    queryFn: adminQueryFn,
-  });
-
-  const addProductMutation = useMutation({
-    mutationFn: (data: any) =>
-      adminRequest("POST", "/api/admin/products", data),
-    onSuccess: () => {
-      toast({
-        title: "Product added successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/products"] });
-      setFormData({
-        name: "",
-        description: "",
-        price: "",
-        stock: "",
-        category: "peanut-butter",
-        image: "",
-        slug: "",
-      });
-      setIsAddingProduct(false);
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add product",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateProductMutation = useMutation({
-    mutationFn: (data: any) =>
-      adminRequest("PATCH", `/api/admin/products/${editingId}`, data),
-    onSuccess: () => {
-      toast({
-        title: "Product updated successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/products"] });
-      setFormData({
-        name: "",
-        description: "",
-        price: "",
-        stock: "",
-        category: "peanut-butter",
-        image: "",
-        slug: "",
-      });
-      setEditingId(null);
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update product",
-        variant: "destructive",
-      });
-    },
+  const { data: products = [] } = useQuery<any[]>({
+    queryKey: ["/api/products"],
   });
 
   const deleteProductMutation = useMutation({
-    mutationFn: (id: string) =>
-      adminRequest("DELETE", `/api/admin/products/${id}`, {}),
+    mutationFn: (id: string) => adminRequest("DELETE", `/api/admin/products/${id}`, {}),
     onSuccess: () => {
-      toast({
-        title: "Product deleted successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/products"] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete product",
-        variant: "destructive",
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({ title: "Product deleted" });
     },
   });
 
-  const handleSubmit = () => {
-    const data = {
-      ...formData,
-      price: parseFloat(formData.price),
-      stock: parseInt(formData.stock),
-    };
-
-    if (editingId) {
-      updateProductMutation.mutate(data);
-    } else {
-      addProductMutation.mutate(data);
-    }
-  };
-
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Products</h2>
-        <Dialog open={isAddingProduct} onOpenChange={setIsAddingProduct}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-add-product">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingId ? "Edit Product" : "Add New Product"}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Product Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  data-testid="input-product-name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="slug">Slug</Label>
-                <Input
-                  id="slug"
-                  value={formData.slug}
-                  onChange={(e) =>
-                    setFormData({ ...formData, slug: e.target.value })
-                  }
-                  data-testid="input-product-slug"
-                />
-              </div>
-              <div>
-                <Label htmlFor="price">Price</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: e.target.value })
-                  }
-                  data-testid="input-product-price"
-                />
-              </div>
-              <div>
-                <Label htmlFor="stock">Stock</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  value={formData.stock}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stock: e.target.value })
-                  }
-                  data-testid="input-product-stock"
-                />
-              </div>
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, category: value })
-                  }
-                >
-                  <SelectTrigger id="category" data-testid="select-product-category">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="peanut-butter">Peanut Butter</SelectItem>
-                    <SelectItem value="chocolate">Chocolate</SelectItem>
-                    <SelectItem value="crunchy">Crunchy</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="image">Image URL</Label>
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image: e.target.value })
-                  }
-                  data-testid="input-product-image"
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  data-testid="textarea-product-description"
-                />
-              </div>
-              <Button
-                onClick={handleSubmit}
-                disabled={
-                  addProductMutation.isPending ||
-                  updateProductMutation.isPending
-                }
-                data-testid="button-submit-product"
-              >
-                {editingId ? "Update Product" : "Add Product"}
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle>Products</CardTitle>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setEditingProduct(null)} data-testid="button-add-product">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Product
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {isLoading ? (
-        <div>Loading...</div>
-      ) : (
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products?.map((product: any) => (
-                <TableRow key={product.id}>
-                  <TableCell>{product.name}</TableCell>
-                  <TableCell>₹{product.price}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{product.category}</Badge>
-                  </TableCell>
-                  <TableCell className="space-x-2">
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingProduct ? "Edit Product" : "Add New Product"}
+                </DialogTitle>
+              </DialogHeader>
+              <ProductForm
+                product={editingProduct}
+                onSuccess={() => {
+                  setIsDialogOpen(false);
+                  setEditingProduct(null);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Image</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {products.map((product) => (
+              <TableRow key={product.id} data-testid={`row-product-${product.id}`}>
+                <TableCell>
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-12 h-12 object-cover rounded"
+                  />
+                </TableCell>
+                <TableCell className="font-medium">{product.name}</TableCell>
+                <TableCell className="capitalize">{product.category}</TableCell>
+                <TableCell>₹{Number(product.price).toFixed(2)}</TableCell>
+                <TableCell>
+                  {product.inStock ? (
+                    <Badge variant="default">{product.stockQuantity}</Badge>
+                  ) : (
+                    <Badge variant="destructive">Out of Stock</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
                     <Button
-                      size="sm"
-                      variant="outline"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => {
-                        setFormData(product);
-                        setEditingId(product.id);
-                        setIsAddingProduct(true);
+                        setEditingProduct(product);
+                        setIsDialogOpen(true);
                       }}
                       data-testid={`button-edit-product-${product.id}`}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
-                      size="sm"
-                      variant="destructive"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => deleteProductMutation.mutate(product.id)}
                       data-testid={`button-delete-product-${product.id}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProductForm({ product, onSuccess }: { product?: any; onSuccess: () => void }) {
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    name: product?.name || "",
+    description: product?.description || "",
+    price: product?.price || "",
+    category: product?.category || "creamy",
+    image: product?.image || "",
+    stockQuantity: product?.stockQuantity || 0,
+    inStock: product?.inStock ?? true,
+  });
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: (data: any) => {
+      const dataWithSlug = {
+        ...data,
+        slug: product?.slug || generateSlug(data.name),
+      };
+      if (product) {
+        return adminRequest("PATCH", `/api/admin/products/${product.id}`, dataWithSlug);
+      }
+      return adminRequest("POST", "/api/admin/products", dataWithSlug);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({ title: product ? "Product updated" : "Product created" });
+      onSuccess();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to save product",
+        variant: "destructive"
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveMutation.mutate(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="name">Product Name</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+          data-testid="input-product-name"
+        />
+      </div>
+      <div>
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          required
+          data-testid="input-product-description"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="price">Price</Label>
+          <Input
+            id="price"
+            type="number"
+            step="0.01"
+            value={formData.price}
+            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            required
+            data-testid="input-product-price"
+          />
         </div>
-      )}
-    </div>
+        <div>
+          <Label htmlFor="category">Category</Label>
+          <Select
+            value={formData.category}
+            onValueChange={(value) => setFormData({ ...formData, category: value })}
+          >
+            <SelectTrigger data-testid="select-product-category">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="creamy">Creamy</SelectItem>
+              <SelectItem value="crunchy">Crunchy</SelectItem>
+              <SelectItem value="specialty">Specialty</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="stockQuantity">Stock Quantity</Label>
+          <Input
+            id="stockQuantity"
+            type="number"
+            value={formData.stockQuantity}
+            onChange={(e) =>
+              setFormData({ ...formData, stockQuantity: parseInt(e.target.value) })
+            }
+            required
+            data-testid="input-product-stock"
+          />
+        </div>
+        <div>
+          <Label htmlFor="inStock">In Stock</Label>
+          <Select
+            value={formData.inStock ? "yes" : "no"}
+            onValueChange={(value) => setFormData({ ...formData, inStock: value === "yes" })}
+          >
+            <SelectTrigger data-testid="select-product-instock">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="yes">Yes</SelectItem>
+              <SelectItem value="no">No</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div>
+        <Label htmlFor="image">Image URL</Label>
+        <Input
+          id="image"
+          value={formData.image}
+          onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+          required
+          data-testid="input-product-image"
+        />
+      </div>
+      <Button type="submit" className="w-full" disabled={saveMutation.isPending} data-testid="button-save-product">
+        {saveMutation.isPending ? "Saving..." : "Save Product"}
+      </Button>
+    </form>
   );
 }
 
 function OrdersManagement() {
-  const { data: orders, isLoading } = useQuery({
+  const { toast } = useToast();
+
+  const { data: orders = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/orders"],
     queryFn: adminQueryFn,
   });
-  const { toast } = useToast();
 
-  const updateOrderStatusMutation = useMutation({
-    mutationFn: ({
-      orderId,
-      status,
-    }: {
-      orderId: string;
-      status: string;
-    }) =>
-      adminRequest("PATCH", `/api/admin/orders/${orderId}`, {
+  const updateDeliveryStatusMutation = useMutation({
+    mutationFn: ({ orderId, status, location, message }: any) =>
+      adminRequest("POST", `/api/admin/orders/${orderId}/tracking`, {
         status,
+        location,
+        message,
       }),
     onSuccess: () => {
-      toast({
-        title: "Order updated successfully",
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/orders"] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update order",
-        variant: "destructive",
-      });
+      toast({ title: "Delivery status updated" });
     },
   });
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Orders</h2>
-      {isLoading ? (
-        <div>Loading...</div>
-      ) : (
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order #</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
+    <Card>
+      <CardHeader>
+        <CardTitle>Orders</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order #</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders.map((order) => (
+              <TableRow key={order.id} data-testid={`row-order-${order.id}`}>
+                <TableCell className="font-medium">{order.orderNumber}</TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    <p className="font-medium">{order.contactDetails?.fullName}</p>
+                    <p className="text-muted-foreground">{order.contactDetails?.email}</p>
+                  </div>
+                </TableCell>
+                <TableCell>{format(new Date(order.createdAt), "PP")}</TableCell>
+                <TableCell>
+                    ₹{Number(order.totalAmount).toFixed(2)}
+                  </TableCell>
+                <TableCell>
+                  <Badge variant="secondary" className="capitalize">
+                    {order.deliveryStatus?.replace(/_/g, " ")}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <DeliveryStatusUpdater
+                    orderId={order.id}
+                    currentStatus={order.deliveryStatus}
+                    onUpdate={updateDeliveryStatusMutation.mutate}
+                  />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders?.map((order: any) => (
-                <TableRow key={order.id}>
-                  <TableCell data-testid={`text-order-number-${order.id}`}>
-                    {order.orderNumber}
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(order.createdAt), "MMM dd, yyyy")}
-                  </TableCell>
-                  <TableCell>₹{order.totalAmount}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        order.status === "completed" ? "default" : "secondary"
-                      }
-                      data-testid={`status-order-${order.id}`}
-                    >
-                      {order.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={order.status}
-                      onValueChange={(status) => {
-                        updateOrderStatusMutation.mutate({
-                          orderId: order.id,
-                          status,
-                        });
-                      }}
-                    >
-                      <SelectTrigger
-                        className="w-[130px]"
-                        data-testid={`select-order-status-${order.id}`}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="processing">Processing</SelectItem>
-                        <SelectItem value="shipped">Shipped</SelectItem>
-                        <SelectItem value="delivered">Delivered</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-    </div>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }
 
 function ReturnsManagement() {
-  const { data: returns, isLoading } = useQuery({
+  const { toast } = useToast();
+  
+  const { data: returns = [], refetch } = useQuery<any[]>({
     queryKey: ["/api/admin/returns"],
     queryFn: adminQueryFn,
   });
-  const { toast } = useToast();
 
-  const updateReturnStatusMutation = useMutation({
-    mutationFn: ({
-      returnId,
-      status,
-    }: {
-      returnId: string;
-      status: string;
-    }) =>
-      adminRequest("PATCH", `/api/admin/returns/${returnId}`, {
-        status,
-      }),
+  const updateReturnMutation = useMutation({
+    mutationFn: async ({ id, status, adminResponse }: any) => {
+      return adminRequest("PATCH", `/api/admin/returns/${id}`, { status, adminResponse });
+    },
     onSuccess: () => {
       toast({
-        title: "Return updated successfully",
+        title: "Return request updated",
+        description: "The return status has been updated successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/returns"] });
+      refetch();
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to update return",
+        title: "Update failed",
+        description: "Failed to update return status.",
         variant: "destructive",
       });
     },
   });
 
+  const updateReturnTrackingMutation = useMutation({
+    mutationFn: ({ returnId, status, location, message }: any) =>
+      adminRequest("POST", `/api/admin/returns/${returnId}/tracking`, {
+        status,
+        location,
+        message,
+      }),
+    onSuccess: () => {
+      refetch();
+      toast({ title: "Return tracking updated" });
+    },
+  });
+
+  const handleApprove = (returnId: string) => {
+    updateReturnMutation.mutate({
+      id: returnId,
+      status: "approved",
+      adminResponse: "Return request approved",
+    });
+  };
+
+  const handleReject = (returnId: string) => {
+    updateReturnMutation.mutate({
+      id: returnId,
+      status: "rejected",
+      adminResponse: "Return request rejected",
+    });
+  };
+
+  const statusColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+    pending: "secondary",
+    approved: "default",
+    rejected: "destructive",
+    completed: "outline",
+  };
+
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Returns</h2>
-      {isLoading ? (
-        <div>Loading...</div>
-      ) : (
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
+    <Card>
+      <CardHeader>
+        <CardTitle>Return Requests</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order Number</TableHead>
+              <TableHead>Reason</TableHead>
+              <TableHead>Requested</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Return Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {returns.length === 0 ? (
               <TableRow>
-                <TableHead>Return ID</TableHead>
-                <TableHead>Order #</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  No return requests found
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {returns?.map((ret: any) => (
-                <TableRow key={ret.id}>
-                  <TableCell data-testid={`text-return-id-${ret.id}`}>
-                    {ret.id}
+            ) : (
+              returns.map((returnRequest: any) => (
+                <TableRow key={returnRequest.id}>
+                  <TableCell className="font-medium">
+                    {returnRequest.order?.orderNumber}
                   </TableCell>
-                  <TableCell>{ret.orderId}</TableCell>
-                  <TableCell>{ret.reason}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{ret.status}</Badge>
+                  <TableCell className="max-w-xs truncate">
+                    {returnRequest.reason}
                   </TableCell>
                   <TableCell>
-                    <Select
-                      value={ret.status}
-                      onValueChange={(status) => {
-                        updateReturnStatusMutation.mutate({
-                          returnId: ret.id,
-                          status,
-                        });
-                      }}
-                    >
-                      <SelectTrigger
-                        className="w-[130px]"
-                        data-testid={`select-return-status-${ret.id}`}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="requested">Requested</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {format(new Date(returnRequest.requestedAt), "PP")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusColors[returnRequest.status]}>
+                      {returnRequest.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="capitalize">
+                      {returnRequest.returnStatus?.replace(/_/g, " ")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      {returnRequest.status === "pending" && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleApprove(returnRequest.id)}
+                            disabled={updateReturnMutation.isPending}
+                            data-testid={`button-approve-return-${returnRequest.id}`}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReject(returnRequest.id)}
+                            disabled={updateReturnMutation.isPending}
+                            data-testid={`button-reject-return-${returnRequest.id}`}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      {returnRequest.status === "approved" && (
+                        <ReturnStatusUpdater
+                          returnId={returnRequest.id}
+                          currentStatus={returnRequest.returnStatus}
+                          onUpdate={updateReturnTrackingMutation.mutate}
+                        />
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-    </div>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
+}
+
+function DeliveryStatusUpdater({
+  orderId,
+  currentStatus,
+  onUpdate,
+}: {
+  orderId: string;
+  currentStatus: string;
+  onUpdate: (data: any) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [status, setStatus] = useState(currentStatus);
+  const [location, setLocation] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdate({ orderId, status, location, message });
+    setIsOpen(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" data-testid={`button-update-status-${orderId}`}>
+          Update Status
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Update Delivery Status</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label>Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger data-testid="select-delivery-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="order_placed">Order Placed</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+                <SelectItem value="shipped">Shipped</SelectItem>
+                <SelectItem value="in_transit">In Transit</SelectItem>
+                <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                <SelectItem value="delivered">Delivered</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Location (optional)</Label>
+            <Input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g., Lucknow, UP"
+              data-testid="input-delivery-location"
+            />
+          </div>
+          <div>
+            <Label>Message</Label>
+            <Textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Status update message"
+              required
+              data-testid="input-delivery-message"
+            />
+          </div>
+          <Button type="submit" className="w-full" data-testid="button-submit-status">
+            Update
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReturnStatusUpdater({
+  returnId,
+  currentStatus,
+  onUpdate,
+}: {
+  returnId: string;
+  currentStatus: string;
+  onUpdate: (data: any) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [status, setStatus] = useState(currentStatus);
+  const [location, setLocation] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdate({ returnId, status, location, message });
+    setIsOpen(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" data-testid={`button-update-return-status-${returnId}`}>
+          Update Tracking
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Update Return Tracking</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label>Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger data-testid="select-return-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="requested">Requested</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="pickup_scheduled">Pickup Scheduled</SelectItem>
+                <SelectItem value="picked_up">Picked Up</SelectItem>
+                <SelectItem value="in_transit">In Transit</SelectItem>
+                <SelectItem value="received_at_warehouse">Received at Warehouse</SelectItem>
+                <SelectItem value="inspecting">Inspecting</SelectItem>
+                <SelectItem value="refund_processing">Refund Processing</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Location (optional)</Label>
+            <Input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g., Warehouse, Lucknow"
+              data-testid="input-return-location"
+            />
+          </div>
+          <div>
+            <Label>Message</Label>
+            <Textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Return status update message"
+              required
+              data-testid="input-return-message"
+            />
+          </div>
+          <Button type="submit" className="w-full" data-testid="button-submit-return-status">
+            Update
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface Coupon {
+  id: number;
+  code: string;
+  discountType: "percentage" | "fixed";
+  discountValue: string;
+  minOrderValue: string;
+  isPublic: boolean;
+  isActive: boolean;
+  usageLimit: number | null;
+  usedCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 function CouponsManagement() {
   const { toast } = useToast();
-  const [isAddingCoupon, setIsAddingCoupon] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    code: "",
-    discountPercentage: "",
-    usageLimit: "",
-    isPublic: true,
-  });
+  const [open, setOpen] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
 
-  const { data: coupons, isLoading } = useQuery({
+  const { data: coupons, isLoading } = useQuery<Coupon[]>({
     queryKey: ["/api/admin/coupons"],
     queryFn: adminQueryFn,
   });
 
-  const addCouponMutation = useMutation({
-    mutationFn: (data: any) =>
-      adminRequest("POST", "/api/admin/coupons", data),
+  const createMutation = useMutation({
+    mutationFn: (data: any) => adminRequest("POST", "/api/admin/coupons", data),
     onSuccess: () => {
-      toast({
-        title: "Coupon added successfully",
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
-      setFormData({
-        code: "",
-        discountPercentage: "",
-        usageLimit: "",
-        isPublic: true,
+      setOpen(false);
+      setEditingCoupon(null);
+      toast({
+        title: "Success",
+        description: "Coupon created successfully",
       });
-      setIsAddingCoupon(false);
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to add coupon",
+        description: error.message || "Failed to create coupon",
         variant: "destructive",
       });
     },
   });
 
-  const updateCouponMutation = useMutation({
-    mutationFn: (data: any) =>
-      adminRequest("PATCH", `/api/admin/coupons/${editingId}`, data),
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      adminRequest("PATCH", `/api/admin/coupons/${id}`, data),
     onSuccess: () => {
-      toast({
-        title: "Coupon updated successfully",
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
-      setFormData({
-        code: "",
-        discountPercentage: "",
-        usageLimit: "",
-        isPublic: true,
+      setOpen(false);
+      setEditingCoupon(null);
+      toast({
+        title: "Success",
+        description: "Coupon updated successfully",
       });
-      setEditingId(null);
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to update coupon",
+        description: error.message || "Failed to update coupon",
         variant: "destructive",
       });
     },
   });
 
-  const deleteCouponMutation = useMutation({
-    mutationFn: (id: string) =>
-      adminRequest("DELETE", `/api/admin/coupons/${id}`, {}),
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => adminRequest("DELETE", `/api/admin/coupons/${id}`),
     onSuccess: () => {
-      toast({
-        title: "Coupon deleted successfully",
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
+      toast({
+        title: "Success",
+        description: "Coupon deleted successfully",
+      });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to delete coupon",
+        description: error.message || "Failed to delete coupon",
         variant: "destructive",
       });
     },
   });
-
-  const handleSubmit = () => {
-    const data = {
-      ...formData,
-      discountPercentage: parseInt(formData.discountPercentage),
-      usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : undefined,
-    };
-
-    if (editingId) {
-      updateCouponMutation.mutate(data);
-    } else {
-      addCouponMutation.mutate(data);
-    }
-  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Coupons</h2>
-        <Dialog open={isAddingCoupon} onOpenChange={setIsAddingCoupon}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-add-coupon">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Coupon
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingId ? "Edit Coupon" : "Add New Coupon"}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="code">Coupon Code</Label>
-                <Input
-                  id="code"
-                  value={formData.code}
-                  onChange={(e) =>
-                    setFormData({ ...formData, code: e.target.value })
-                  }
-                  data-testid="input-coupon-code"
-                />
-              </div>
-              <div>
-                <Label htmlFor="discountPercentage">Discount %</Label>
-                <Input
-                  id="discountPercentage"
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={formData.discountPercentage}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      discountPercentage: e.target.value,
-                    })
-                  }
-                  data-testid="input-discount-percentage"
-                />
-              </div>
-              <div>
-                <Label htmlFor="usageLimit">Usage Limit</Label>
-                <Input
-                  id="usageLimit"
-                  type="number"
-                  min="1"
-                  placeholder="Unlimited"
-                  value={formData.usageLimit}
-                  onChange={(e) =>
-                    setFormData({ ...formData, usageLimit: e.target.value })
-                  }
-                  data-testid="input-usage-limit"
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isPublic"
-                  checked={formData.isPublic}
-                  onChange={(e) =>
-                    setFormData({ ...formData, isPublic: e.target.checked })
-                  }
-                  data-testid="checkbox-is-public"
-                />
-                <Label htmlFor="isPublic" className="text-sm">
-                  Make Public
-                </Label>
-              </div>
-
-              <Button
-                onClick={handleSubmit}
-                disabled={
-                  addCouponMutation.isPending || updateCouponMutation.isPending
-                }
-                data-testid="button-submit-coupon"
-              >
-                {editingId ? "Update Coupon" : "Add Coupon"}
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle>Coupon Management</CardTitle>
+          <Dialog
+            open={open}
+            onOpenChange={(isOpen) => {
+              setOpen(isOpen);
+              if (!isOpen) setEditingCoupon(null);
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button data-testid="button-add-coupon">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Coupon
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {isLoading ? (
-        <div>Loading...</div>
-      ) : (
-        <div className="border rounded-lg overflow-hidden">
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingCoupon ? "Edit Coupon" : "Create Coupon"}
+                </DialogTitle>
+              </DialogHeader>
+              <CouponForm
+                coupon={editingCoupon}
+                onSubmit={(data) => {
+                  if (editingCoupon) {
+                    updateMutation.mutate({ id: editingCoupon.id, data });
+                  } else {
+                    createMutation.mutate(data);
+                  }
+                }}
+                isLoading={createMutation.isPending || updateMutation.isPending}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p>Loading coupons...</p>
+        ) : (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Code</TableHead>
                 <TableHead>Discount</TableHead>
-                <TableHead>Usage Limit</TableHead>
-                <TableHead>Public</TableHead>
+                <TableHead>Min Order</TableHead>
+                <TableHead>Usage</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {coupons?.map((coupon: any) => (
+              {coupons?.map((coupon) => (
                 <TableRow key={coupon.id}>
-                  <TableCell data-testid={`text-coupon-code-${coupon.id}`}>
-                    {coupon.code}
-                  </TableCell>
-                  <TableCell>{coupon.discountPercentage}%</TableCell>
                   <TableCell>
-                    {coupon.usageLimit ? coupon.usageLimit : "Unlimited"}
+                    <div className="flex items-center gap-2">
+                      <code className="font-mono font-bold">{coupon.code}</code>
+                      {coupon.isPublic && (
+                        <Badge variant="outline" className="text-xs">
+                          Public
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    {coupon.isPublic ? (
-                      <Badge variant="default">Public</Badge>
-                    ) : (
-                      <Badge variant="secondary">Private</Badge>
-                    )}
+                    {coupon.discountType === "percentage"
+                      ? `${coupon.discountValue}%`
+                      : `₹${Number(coupon.discountValue).toFixed(2)}`}
                   </TableCell>
-                  <TableCell className="space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setFormData(coupon);
-                        setEditingId(coupon.id);
-                        setIsAddingCoupon(true);
-                      }}
-                      data-testid={`button-edit-coupon-${coupon.id}`}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => deleteCouponMutation.mutate(coupon.id)}
-                      data-testid={`button-delete-coupon-${coupon.id}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <TableCell>₹{Number(coupon.minOrderValue).toFixed(2)}</TableCell>
+                  <TableCell>
+                    {coupon.usedCount} / {coupon.usageLimit || "∞"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={coupon.isActive ? "default" : "secondary"}>
+                      {coupon.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setEditingCoupon(coupon);
+                          setOpen(true);
+                        }}
+                        data-testid={`button-edit-coupon-${coupon.id}`}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          if (
+                            confirm("Are you sure you want to delete this coupon?")
+                          ) {
+                            deleteMutation.mutate(coupon.id);
+                          }
+                        }}
+                        data-testid={`button-delete-coupon-${coupon.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
+              {coupons?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    No coupons found
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-        </div>
-      )}
-    </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CouponForm({
+  coupon,
+  onSubmit,
+  isLoading,
+}: {
+  coupon: Coupon | null;
+  onSubmit: (data: any) => void;
+  isLoading: boolean;
+}) {
+  const [formData, setFormData] = useState({
+    code: coupon?.code || "",
+    discountType: (coupon?.discountType || "percentage") as "percentage" | "fixed",
+    discountValue: coupon?.discountValue || "",
+    minOrderValue: coupon?.minOrderValue || "0",
+    isPublic: coupon?.isPublic ?? true,
+    isActive: coupon?.isActive ?? true,
+    usageLimit: coupon?.usageLimit?.toString() || "",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      code: formData.code.toUpperCase().trim(),
+      discountType: formData.discountType,
+      discountValue: formData.discountValue,
+      minOrderValue: formData.minOrderValue,
+      isPublic: formData.isPublic,
+      isActive: formData.isActive,
+      usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="code">Coupon Code</Label>
+        <Input
+          id="code"
+          placeholder="SAVE20"
+          value={formData.code}
+          onChange={(e) =>
+            setFormData({ ...formData, code: e.target.value.toUpperCase() })
+          }
+          required
+          data-testid="input-coupon-code-form"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="discountType">Discount Type</Label>
+        <Select
+          value={formData.discountType}
+          onValueChange={(value: "percentage" | "fixed") =>
+            setFormData({ ...formData, discountType: value })
+          }
+        >
+          <SelectTrigger id="discountType" data-testid="select-discount-type">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="percentage">Percentage (%)</SelectItem>
+            <SelectItem value="fixed">Fixed Amount (₹)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="discountValue">Discount Value</Label>
+        <Input
+          id="discountValue"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder={formData.discountType === "percentage" ? "10" : "100"}
+          value={formData.discountValue}
+          onChange={(e) =>
+            setFormData({ ...formData, discountValue: e.target.value })
+          }
+          required
+          data-testid="input-discount-value"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="minOrderValue">Minimum Order Value (₹)</Label>
+        <Input
+          id="minOrderValue"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="0"
+          value={formData.minOrderValue}
+          onChange={(e) =>
+            setFormData({ ...formData, minOrderValue: e.target.value })
+          }
+          required
+          data-testid="input-min-order-value"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="usageLimit">Usage Limit (leave blank for unlimited)</Label>
+        <Input
+          id="usageLimit"
+          type="number"
+          min="1"
+          placeholder="Unlimited"
+          value={formData.usageLimit}
+          onChange={(e) =>
+            setFormData({ ...formData, usageLimit: e.target.value })
+          }
+          data-testid="input-usage-limit"
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="isPublic"
+          checked={formData.isPublic}
+          onChange={(e) =>
+            setFormData({ ...formData, isPublic: e.target.checked })
+          }
+          data-testid="checkbox-is-public"
+          className="rounded"
+        />
+        <Label htmlFor="isPublic" className="cursor-pointer">
+          Show to all users (public)
+        </Label>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="isActive"
+          checked={formData.isActive}
+          onChange={(e) =>
+            setFormData({ ...formData, isActive: e.target.checked })
+          }
+          data-testid="checkbox-is-active"
+          className="rounded"
+        />
+        <Label htmlFor="isActive" className="cursor-pointer">
+          Active
+        </Label>
+      </div>
+
+      <Button type="submit" disabled={isLoading} className="w-full" data-testid="button-submit-coupon">
+        {isLoading ? "Saving..." : coupon ? "Update Coupon" : "Create Coupon"}
+      </Button>
+    </form>
   );
 }

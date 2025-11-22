@@ -1,5 +1,4 @@
 import { Switch, Route, useLocation } from "wouter";
-import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useMutation } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
@@ -11,8 +10,6 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { AIAssistant } from "@/components/ai-assistant";
 import { Button } from "@/components/ui/button";
-import { NotificationPrompt } from "@/components/notification-prompt";
-import { registerServiceWorker, requestNotificationPermission, initializeNotificationTimer, triggerNotificationNow } from "@/lib/notifications";
 import Home from "@/pages/home";
 import Products from "@/pages/products";
 import ProductDetail from "@/pages/product-detail";
@@ -85,28 +82,6 @@ function AppContent() {
   const [location, navigate] = useLocation();
   const isAdminPage = location.startsWith("/admin");
 
-  // Initialize notifications on app load
-  useEffect(() => {
-    const initializeNotifications = async () => {
-      // Register service worker
-      await registerServiceWorker();
-      
-      // Request notification permission
-      const hasPermission = await requestNotificationPermission();
-      
-      if (hasPermission) {
-        // Initialize notification timer with 16+ min intervals
-        initializeNotificationTimer();
-        
-        // Expose trigger function to window for testing
-        (window as any).triggerOrnutNotification = triggerNotificationNow;
-        console.log('✅ To trigger a notification, run: window.triggerOrnutNotification()');
-      }
-    };
-
-    initializeNotifications();
-  }, []);
-
   const addToCartMutation = useMutation({
     mutationFn: async (productId: string) => {
       if (!user) {
@@ -155,7 +130,6 @@ function AppContent() {
     <>
       <Router />
       <AIAssistant onAddToCart={handleAddToCart} />
-      <NotificationPrompt />
     </>
   );
 }
