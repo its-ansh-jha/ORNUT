@@ -215,7 +215,7 @@ export function Navbar() {
               <Button 
                 onClick={signInWithGoogle}
                 disabled={signingIn}
-                className="hidden sm:inline-flex"
+                className="inline-flex"
                 data-testid="button-signin"
               >
                 {signingIn ? "Signing in..." : "Sign In"}
