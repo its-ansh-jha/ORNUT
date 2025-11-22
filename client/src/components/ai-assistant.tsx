@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, X, Send, Image as ImageIcon, Loader2, Plus, Trash2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth-context";
 import { Badge } from "@/components/ui/badge";
 
 interface Message {
@@ -24,6 +25,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const chatMutation = useMutation({
     mutationFn: async (data: { messages: Message[]; image?: { mimeType: string; data: string } }): Promise<{ response: string; products?: any[] }> => {
@@ -297,7 +299,17 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
                                 <Button
                                   size="sm"
                                   className="w-full mt-2"
-                                  onClick={() => onAddToCart(product.id)}
+                                  onClick={() => {
+                                    if (!user) {
+                                      toast({
+                                        title: "Please login first",
+                                        description: "You need to sign in to add items to cart",
+                                        variant: "destructive",
+                                      });
+                                      return;
+                                    }
+                                    onAddToCart(product.id);
+                                  }}
                                   data-testid={`button-add-to-cart-${product.id}`}
                                 >
                                   <Plus className="h-3 w-3 mr-1" />
