@@ -2,12 +2,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell } from "lucide-react";
 import { requestNotificationPermission } from "@/lib/notifications";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function NotificationPrompt() {
   const [dismissed, setDismissed] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
 
-  if (dismissed || Notification.permission !== "default") {
+  useEffect(() => {
+    // Check if notifications are supported and permission is default
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setIsSupported((window as any).Notification.permission === "default");
+    }
+  }, []);
+
+  if (!isSupported || dismissed) {
     return null;
   }
 
