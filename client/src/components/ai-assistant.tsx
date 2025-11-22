@@ -205,8 +205,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
       bottom: "100px", 
       right: "24px", 
       zIndex: 99999, 
-      width: "384px", 
-      maxWidth: "calc(100vw - 48px)",
+      width: "clamp(300px, 384px, calc(100vw - 48px))",
       pointerEvents: !isOpen ? "auto" : "auto",
       transform: "translateZ(0)",
       willChange: "transform"
