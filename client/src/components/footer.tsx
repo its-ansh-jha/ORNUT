@@ -3,73 +3,76 @@ import { Facebook, Instagram, Twitter } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/30 mt-16">
+    <footer className="border-t bg-gray-50 mt-16">
       <div className="container mx-auto max-w-7xl px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="font-semibold text-lg mb-4">Ornut</h3>
-            <p className="text-sm text-muted-foreground">
-              A premium artisanal peanut butter company.
+            <h3 className="font-bold text-xl mb-4 text-green-600">Ornut</h3>
+            <p className="text-sm text-gray-600 mb-2">
+              Premium peanut butter crafted with passion. 100% natural, no preservatives.
+            </p>
+            <p className="text-xs text-gray-500 mt-4">
+              Email: support@peanutproducts.in
             </p>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Shop</h4>
+            <h4 className="font-semibold mb-4 text-gray-800">Products</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/products" className="text-muted-foreground hover:text-foreground">
+                <Link href="/products" className="text-gray-600 hover:text-green-600">
                   All Products
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=creamy" className="text-muted-foreground hover:text-foreground">
-                  Creamy
+                <Link href="/products?category=peanut-butter" className="text-gray-600 hover:text-green-600">
+                  Peanut Butter
                 </Link>
               </li>
               <li>
-                <Link href="/products?category=crunchy" className="text-muted-foreground hover:text-foreground">
+                <Link href="/products?category=chocolate" className="text-gray-600 hover:text-green-600">
+                  Chocolate
+                </Link>
+              </li>
+              <li>
+                <Link href="/products?category=crunchy" className="text-gray-600 hover:text-green-600">
                   Crunchy
-                </Link>
-              </li>
-              <li>
-                <Link href="/products?category=specialty" className="text-muted-foreground hover:text-foreground">
-                  Specialty
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Support</h4>
+            <h4 className="font-semibold mb-4 text-gray-800">Company</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/faq" className="text-muted-foreground hover:text-foreground">
+                <Link href="/about" className="text-gray-600 hover:text-green-600">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="text-gray-600 hover:text-green-600">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/track-order" className="text-muted-foreground hover:text-foreground">
+                <Link href="/contact" className="text-gray-600 hover:text-green-600">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href="/track-order" className="text-gray-600 hover:text-green-600">
                   Track Order
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-muted-foreground hover:text-foreground">
-                  Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-muted-foreground hover:text-foreground">
-                  About Us
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Follow Us</h4>
-            <div className="flex gap-4">
+            <h4 className="font-semibold mb-4 text-gray-800">Connect</h4>
+            <div className="flex gap-4 mb-6">
               <a 
                 href="https://www.facebook.com/share/1Ck558bCLg/" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary" 
+                className="text-gray-600 hover:text-green-600" 
                 aria-label="Facebook"
                 data-testid="link-facebook"
               >
@@ -79,7 +82,7 @@ export function Footer() {
                 href="https://instagram.com/ornu_t" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary" 
+                className="text-gray-600 hover:text-green-600" 
                 aria-label="Instagram"
                 data-testid="link-instagram"
               >
@@ -89,17 +92,20 @@ export function Footer() {
                 href="https://twitter.com" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary" 
+                className="text-gray-600 hover:text-green-600" 
                 aria-label="Twitter"
                 data-testid="link-twitter"
               >
                 <Twitter className="h-5 w-5" />
               </a>
             </div>
+            <p className="text-xs text-gray-500">
+              Join thousands enjoying premium peanut butter
+            </p>
           </div>
         </div>
-        <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Ornut All rights reserved.</p>
+        <div className="border-t mt-8 pt-8 text-center text-sm text-gray-500">
+          <p>&copy; {new Date().getFullYear()} Ornut. All rights reserved. Powered by Peanuts.</p>
         </div>
       </div>
     </footer>

@@ -1,14 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { Link, useLocation } from "wouter";
+import { Helmet } from "react-helmet-async";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Product } from "@shared/schema";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ShoppingCart, Heart, Search, SlidersHorizontal } from "lucide-react";
-import { Link, useLocation } from "wouter";
-import { useAuth } from "@/lib/auth-context";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Select,
   SelectContent,
@@ -16,265 +13,226 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ShoppingCart, Search, Star } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Products() {
-  const [location, navigate] = useLocation();
-  const searchParams = new URLSearchParams(location.split("?")[1] || "");
-  const initialSearch = searchParams.get("search") || "";
-  const initialCategory = searchParams.get("category") || "";
-
-  const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    initialCategory ? [initialCategory] : []
-  );
-  const [sortBy, setSortBy] = useState("name");
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("featured");
+  const [category, setCategory] = useState("all");
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
 
-  const { data: wishlist = [] } = useQuery<any[]>({
-    queryKey: ["/api/wishlist"],
-    enabled: !!user,
-  });
+  const filteredProducts = useMemo(() => {
+    let result = products;
+
+    if (searchTerm) {
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (category !== "all") {
+      result = result.filter(p => p.category === category);
+    }
+
+    if (sortBy === "price-low") {
+      result.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+    } else if (sortBy === "price-high") {
+      result.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+    } else if (sortBy === "name") {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return result;
+  }, [products, searchTerm, sortBy, category]);
+
+  return (
+    <>
+      <Helmet>
+        <title>Products - Ornut | Premium Peanut Butter Online</title>
+        <meta name="description" content="Browse our full range of premium peanut butter products. Natural, high-protein, gluten-free options. Free shipping over ₹1200." />
+        <meta name="keywords" content="peanut butter, natural peanut butter, high protein, gluten free, buy online" />
+      </Helmet>
+
+      <div className="min-h-screen bg-white">
+        {/* Hero Section */}
+        <section className="py-16 bg-gradient-to-r from-green-600 to-green-700 text-white">
+          <div className="container mx-auto max-w-7xl px-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Products</h1>
+            <p className="text-lg text-green-100">Discover our full range of premium peanut butter products</p>
+          </div>
+        </section>
+
+        {/* Filters Section */}
+        <section className="py-8 border-b">
+          <div className="container mx-auto max-w-7xl px-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <Input
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 rounded-lg"
+                  data-testid="input-search-products"
+                />
+              </div>
+
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger data-testid="select-category">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="peanut-butter">Peanut Butter</SelectItem>
+                  <SelectItem value="chocolate">Chocolate</SelectItem>
+                  <SelectItem value="crunchy">Crunchy</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger data-testid="select-sort">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="featured">Featured</SelectItem>
+                  <SelectItem value="name">Name (A-Z)</SelectItem>
+                  <SelectItem value="price-low">Price (Low to High)</SelectItem>
+                  <SelectItem value="price-high">Price (High to Low)</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm("");
+                  setCategory("all");
+                  setSortBy("featured");
+                }}
+                data-testid="button-reset-filters"
+              >
+                Reset Filters
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Products Grid */}
+        <section className="py-16">
+          <div className="container mx-auto max-w-7xl px-4">
+            {isLoading ? (
+              <div className="text-center py-12">Loading products...</div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600 text-lg">No products found. Try adjusting your filters.</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-gray-600 mb-8">Showing {filteredProducts.length} products</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {filteredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}
+
+function ProductCard({ product }: { product: Product }) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const addToCartMutation = useMutation({
-    mutationFn: (productId: string) =>
-      apiRequest("POST", "/api/cart", { productId, quantity: 1 }),
+    mutationFn: async () => {
+      if (!user) {
+        throw new Error("Please sign in to add items to cart");
+      }
+      return apiRequest("POST", "/api/cart", { productId: product.id, quantity: 1 });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-      toast({ 
-        title: "Added to cart!",
+      toast({
+        title: "Added to cart",
+        description: "Product added successfully!",
         action: (
           <Button 
             size="sm" 
             variant="default"
             onClick={() => navigate("/cart")}
+            data-testid="button-go-to-cart"
           >
             Go to Cart
           </Button>
         )
       });
     },
-  });
-
-  const toggleWishlistMutation = useMutation({
-    mutationFn: (productId: string) => {
-      const isInWishlist = wishlist.some((item: any) => item.productId === productId);
-      if (isInWishlist) {
-        const wishlistItem = wishlist.find((item: any) => item.productId === productId);
-        return apiRequest("DELETE", `/api/wishlist/${wishlistItem.id}`, {});
+    onError: (error: any) => {
+      if (error.message.includes("sign in")) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to add items to cart",
+          variant: "destructive",
+        });
       }
-      return apiRequest("POST", "/api/wishlist", { productId });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/wishlist"] });
     },
   });
-
-  const filteredProducts = products
-    .filter((p) => {
-      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory =
-        selectedCategories.length === 0 || selectedCategories.includes(p.category);
-      return matchesSearch && matchesCategory;
-    })
-    .sort((a, b) => {
-      if (sortBy === "price-asc") return Number(a.price) - Number(b.price);
-      if (sortBy === "price-desc") return Number(b.price) - Number(a.price);
-      return a.name.localeCompare(b.name);
-    });
-
-  const categories = Array.from(new Set(products.map((p) => p.category)));
-
-  const toggleCategory = (category: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
-    );
-  };
-
-  const handleAddToCart = (productId: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!user) {
-      toast({ title: "Please sign in to add items to cart", variant: "destructive" });
-      return;
-    }
-    addToCartMutation.mutate(productId);
-  };
-
-  const handleToggleWishlist = (productId: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!user) {
-      toast({ title: "Please sign in to add items to wishlist", variant: "destructive" });
-      return;
-    }
-    toggleWishlistMutation.mutate(productId);
-  };
-
-  const FilterSection = () => (
-    <div className="space-y-6">
-      <div>
-        <Label className="text-base font-semibold mb-4 block">Categories</Label>
-        <div className="space-y-3">
-          {categories.map((category) => (
-            <div key={category} className="flex items-center space-x-2">
-              <Checkbox
-                id={category}
-                checked={selectedCategories.includes(category)}
-                onCheckedChange={() => toggleCategory(category)}
-                data-testid={`checkbox-category-${category}`}
-              />
-              <label
-                htmlFor={category}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize"
-              >
-                {category}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8">Our Products</h1>
-
-      <div className="flex flex-col lg:flex-row gap-8">
-        <aside className="hidden lg:block w-64 flex-shrink-0">
-          <Card className="p-6">
-            <FilterSection />
-          </Card>
-        </aside>
-
-        <div className="flex-1">
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-                data-testid="input-product-search"
-              />
-            </div>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-48" data-testid="select-sort">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">Name</SelectItem>
-                <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                <SelectItem value="price-desc">Price: High to Low</SelectItem>
-              </SelectContent>
-            </Select>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="lg:hidden" data-testid="button-filters">
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  Filters
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Filters</SheetTitle>
-                </SheetHeader>
-                <div className="mt-6">
-                  <FilterSection />
-                </div>
-              </SheetContent>
-            </Sheet>
+    <Link href={`/product/${product.slug || product.id}`}>
+      <Card className="hover-elevate h-full cursor-pointer overflow-hidden" data-testid={`card-product-${product.id}`}>
+        <div className="relative h-48 bg-gray-100 overflow-hidden">
+          <img 
+            src={product.image} 
+            alt={product.name}
+            className="w-full h-full object-cover hover:scale-105 transition-transform"
+          />
+          <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+            20% Off
+          </div>
+        </div>
+        <CardContent className="pt-4 pb-4">
+          <h3 className="font-semibold text-lg mb-1 line-clamp-2">{product.name}</h3>
+          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+          
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl font-bold text-green-600">₹{Math.round((Number(product.price) || 0) * 0.8)}</span>
+            <span className="text-sm text-gray-500 line-through">₹{Number(product.price) || 0}</span>
           </div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i}>
-                  <div className="aspect-square bg-muted animate-pulse" />
-                  <CardContent className="p-6">
-                    <div className="h-6 bg-muted rounded mb-2 animate-pulse" />
-                    <div className="h-4 bg-muted rounded w-1/2 animate-pulse" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground text-lg">No products found</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => {
-                const isInWishlist = wishlist.some((item: any) => item.productId === product.id);
-                return (
-                  <Card
-                    key={product.id}
-                    className="overflow-hidden hover-elevate cursor-pointer group"
-                    data-testid={`card-product-${product.id}`}
-                  >
-                    <Link href={`/product/${product.slug || product.id}`}>
-                      <div className="relative aspect-square overflow-hidden">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                        />
-                        <Button
-                          size="icon"
-                          variant={isInWishlist ? "default" : "secondary"}
-                          className="absolute top-4 right-4 rounded-full"
-                          onClick={(e) => handleToggleWishlist(product.id, e)}
-                          data-testid={`button-wishlist-${product.id}`}
-                        >
-                          <Heart
-                            className={`h-4 w-4 ${isInWishlist ? "fill-current" : ""}`}
-                          />
-                        </Button>
-                      </div>
-                    </Link>
-                    <CardContent className="p-6">
-                      <Link href={`/product/${product.slug || product.id}`}>
-                        <h3 className="font-semibold text-xl mb-2" data-testid={`text-product-name-${product.id}`}>
-                          {product.name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-2 capitalize">
-                          {product.category}
-                        </p>
-                        <p className="text-2xl font-bold text-primary mb-4" data-testid={`text-product-price-${product.id}`}>
-                          ₹{Number(product.price).toFixed(2)}
-                        </p>
-                      </Link>
-                      <Button
-                        className="w-full"
-                        onClick={(e) => handleAddToCart(product.id, e)}
-                        disabled={addToCartMutation.isPending}
-                        data-testid={`button-add-to-cart-${product.id}`}
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Add to Cart
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+          <div className="flex items-center gap-1 mb-4">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+            ))}
+            <span className="text-xs text-gray-600 ml-1">(124)</span>
+          </div>
+
+          <Button 
+            onClick={(e) => {
+              e.preventDefault();
+              addToCartMutation.mutate();
+            }}
+            disabled={addToCartMutation.isPending}
+            className="w-full bg-green-600 hover:bg-green-700"
+            data-testid={`button-add-to-cart-${product.id}`}
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
+          </Button>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }

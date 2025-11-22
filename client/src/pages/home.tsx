@@ -2,28 +2,21 @@ import { Link, useLocation } from "wouter";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShoppingCart, Heart, Leaf, Award, Truck, CheckCircle } from "lucide-react";
+import { ShoppingCart, Leaf, Award, Truck, CheckCircle, Star } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Product } from "@shared/schema";
 import { useAuth } from "@/lib/auth-context";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import heroImage from "@assets/generated_images/Hero_banner_peanut_butter_156a8621.png";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
 export default function Home() {
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
 
-  const featuredProducts = products?.slice(0, 3) || [];
+  const featuredProducts = products?.slice(0, 4) || [];
 
-  // Structured data for Organization
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -33,7 +26,7 @@ export default function Home() {
     "description": "Premium high protein peanut butter made in India with 100% natural ingredients. No preservatives, no added sugar.",
     "sameAs": [
       "https://www.facebook.com/ornut",
-      "https://www.instagram.com/ornut",
+      "https://www.instagram.com/ornu_t",
       "https://twitter.com/ornut"
     ]
   };
@@ -49,166 +42,187 @@ export default function Home() {
         <meta name="keywords" content="high protein peanut butter, natural peanut butter, peanut butter India, best peanut butter, gluten free peanut butter, healthy peanut butter, protein rich peanut butter, made in India, no preservatives" />
         <link rel="canonical" href="https://peanutproducts.in/" />
         
-        {/* Open Graph tags */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Ornut - Premium High Protein Peanut Butter Made in India" />
         <meta property="og:description" content="100% natural, high protein peanut butter. No preservatives, gluten-free. Made with premium roasted peanuts in India. Free shipping over ₹1200." />
         <meta property="og:url" content="https://peanutproducts.in/" />
         <meta property="og:site_name" content="Ornut" />
-        <meta property="og:image" content="https://peanutproducts.in/og-image.jpg" />
         
-        {/* Twitter Card tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Ornut - Premium High Protein Peanut Butter" />
         <meta name="twitter:description" content="100% natural, high protein peanut butter made in India. No preservatives, gluten-free." />
-        <meta name="twitter:image" content="https://peanutproducts.in/og-image.jpg" />
 
-        {/* JSON-LD Structured Data */}
         <script type="application/ld+json">
           {JSON.stringify(organizationSchema)}
         </script>
       </Helmet>
 
       <div className="flex flex-col">
+        {/* Hero Section */}
         <section
-        className="relative h-[500px] md:h-[600px] flex items-center justify-center text-white"
-        style={{
-          backgroundImage: `url(${heroImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
-        <div className="relative z-10 container mx-auto max-w-7xl px-4 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            Discover Ornut
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
-            Premium artisanal peanut butter crafted with passion. Natural ingredients, extraordinary taste.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
+          className="relative h-[500px] md:h-[600px] flex items-center justify-center text-white overflow-hidden"
+          style={{
+            backgroundImage: `url(${heroImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/60 to-transparent" />
+          <div className="relative z-10 container mx-auto max-w-7xl px-4 text-left">
+            <div className="max-w-2xl">
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                Peanut Butter Khana Hai
+              </h1>
+              <p className="text-lg md:text-xl mb-8 text-gray-100 max-w-xl">
+                Experience the pure taste of premium peanut butter. 100% natural, high-protein, and deliciously crafted for your health.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link href="/products">
+                  <Button size="lg" className="bg-green-600 hover:bg-green-700" data-testid="button-shop-now">
+                    Shop Now
+                  </Button>
+                </Link>
+                <Button size="lg" variant="outline" className="backdrop-blur-md bg-white/20 border-white text-white hover:bg-white/30" data-testid="button-explore">
+                  Explore Products
+                </Button>
+              </div>
+              <div className="mt-12 flex flex-col gap-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-400" />
+                  <span>100% Natural Ingredients • No Preservatives</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Award className="h-5 w-5 text-green-400" />
+                  <span>High Protein • Gluten Free</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Truck className="h-5 w-5 text-green-400" />
+                  <span>Free Shipping Over ₹1200</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Featured Products Section */}
+        <section className="py-20 bg-white">
+          <div className="container mx-auto max-w-7xl px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4">Our Best Sellers</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+                Handpicked peanut butter products loved by thousands of customers
+              </p>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-12">Loading products...</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
+
+            <div className="text-center mt-12">
+              <Link href="/products">
+                <Button size="lg" variant="outline" data-testid="button-view-all">
+                  View All Products
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Choose Ornut */}
+        <section className="py-20 bg-gradient-to-b from-green-50 to-white">
+          <div className="container mx-auto max-w-7xl px-4">
+            <h2 className="text-4xl font-bold text-center mb-16">Why Choose Ornut?</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="text-center">
+                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Leaf className="h-8 w-8 text-green-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">100% Natural</h3>
+                <p className="text-gray-600">Pure peanuts, no additives or preservatives</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Award className="h-8 w-8 text-green-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">High Protein</h3>
+                <p className="text-gray-600">Packed with 8-10g protein per serving</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Gluten Free</h3>
+                <p className="text-gray-600">Safe for celiac and gluten-sensitive diets</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Truck className="h-8 w-8 text-green-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Fast Delivery</h3>
+                <p className="text-gray-600">Free shipping on orders over ₹1200</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Customer Testimonials */}
+        <section className="py-20 bg-white">
+          <div className="container mx-auto max-w-7xl px-4">
+            <h2 className="text-4xl font-bold text-center mb-16">What Our Customers Say</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                {
+                  name: "Rajesh Kumar",
+                  rating: 5,
+                  text: "Best peanut butter I've had! Creamy, natural taste, and perfect for my fitness routine. Highly recommended!"
+                },
+                {
+                  name: "Priya Sharma",
+                  rating: 5,
+                  text: "Love how natural and pure this is. No artificial taste. My whole family enjoys it on toast and in smoothies."
+                },
+                {
+                  name: "Amit Verma",
+                  rating: 5,
+                  text: "Fast delivery, great quality, and absolutely delicious. Will definitely order again. Worth every penny!"
+                }
+              ].map((testimonial, idx) => (
+                <Card key={idx} className="hover-elevate">
+                  <CardContent className="pt-6">
+                    <div className="flex gap-1 mb-3">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                    <p className="text-gray-700 mb-4 italic">"{testimonial.text}"</p>
+                    <p className="font-semibold text-sm">— {testimonial.name}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 bg-green-600 text-white">
+          <div className="container mx-auto max-w-7xl px-4 text-center">
+            <h2 className="text-4xl font-bold mb-6">Ready to Taste the Difference?</h2>
+            <p className="text-lg mb-8 max-w-2xl mx-auto">
+              Join thousands of health-conscious customers enjoying premium peanut butter
+            </p>
             <Link href="/products">
-              <Button size="lg" variant="default" className="backdrop-blur-md" data-testid="button-shop-now">
-                Shop Now
-              </Button>
-            </Link>
-            <Link href="/about">
-              <Button size="lg" variant="outline" className="backdrop-blur-md bg-background/20" data-testid="button-learn-more">
-                Learn More
+              <Button size="lg" variant="outline" className="bg-white text-green-600 border-white hover:bg-gray-100" data-testid="button-get-started">
+                Get Started Now
               </Button>
             </Link>
           </div>
-          <div className="mt-8 flex flex-wrap gap-6 justify-center text-sm">
-            <div className="flex items-center gap-2">
-              <Truck className="h-5 w-5" />
-              <span>Free shipping over ₹1200</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Award className="h-5 w-5" />
-              <span>Award-winning quality</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Leaf className="h-5 w-5" />
-              <span>100% Natural ingredients</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5" />
-              <span>No Preservatives</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-24 container mx-auto max-w-7xl px-4">
-        <h2 className="text-3xl md:text-4xl font-semibold text-center mb-12">
-          Featured Products
-        </h2>
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="overflow-hidden">
-                <div className="aspect-square bg-muted animate-pulse" />
-                <CardContent className="p-6">
-                  <div className="h-6 bg-muted rounded mb-2 animate-pulse" />
-                  <div className="h-4 bg-muted rounded w-1/2 animate-pulse" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-        <div className="text-center mt-12">
-          <Link href="/products">
-            <Button variant="outline" size="lg" data-testid="button-view-all">
-              View All Products
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-24 bg-muted/30">
-        <div className="container mx-auto max-w-7xl px-4">
-          <h2 className="text-3xl md:text-4xl font-semibold text-center mb-12">
-            Why Choose Us
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <FeatureCard
-              icon={<Leaf className="h-12 w-12 text-primary" />}
-              title="Natural Ingredients"
-              description="Only the finest roasted peanuts and natural ingredients. No artificial additives."
-            />
-            <FeatureCard
-              icon={<Award className="h-12 w-12 text-primary" />}
-              title="Artisanal Process"
-              description="Small-batch production ensures consistent quality and rich, authentic flavor."
-            />
-            <FeatureCard
-              icon={<Leaf className="h-12 w-12 text-primary" />}
-              title="No Preservatives"
-              description="100% free from preservatives, additives, and artificial ingredients. Pure and simple."
-            />
-            <FeatureCard
-              icon={<CheckCircle className="h-12 w-12 text-primary" />}
-              title="Quality Guaranteed"
-              description="Every jar is tested for perfection. Love it or your money back."
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-24 container mx-auto max-w-7xl px-4">
-        <h2 className="text-3xl md:text-4xl font-semibold text-center mb-12">
-          Frequently Asked Questions
-        </h2>
-        <Accordion type="single" collapsible className="max-w-3xl mx-auto">
-          <AccordionItem value="item-1">
-            <AccordionTrigger data-testid="faq-shipping">What are your shipping options?</AccordionTrigger>
-            <AccordionContent>
-              We offer free standard shipping on orders over INR1200. Standard shipping takes 3-5 business days.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-2">
-            <AccordionTrigger data-testid="faq-storage">How should I store the peanut butter?</AccordionTrigger>
-            <AccordionContent>
-              Store in a cool, dry place. After opening, refrigeration is optional but will extend shelf
-              life. Natural separation is normal - just stir before use. Consume within 3 months of opening
-              for best quality.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-4">
-            <AccordionTrigger data-testid="faq-returns">What is your return policy?</AccordionTrigger>
-            <AccordionContent>
-              We offer a 5-day satisfaction guarantee. If you're not completely happy with your purchase,
-              contact us for a full refund or exchange. Your happiness is our priority.
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </section>
+        </section>
       </div>
     </>
   );
@@ -220,113 +234,85 @@ function ProductCard({ product }: { product: Product }) {
   const [, navigate] = useLocation();
 
   const addToCartMutation = useMutation({
-    mutationFn: () =>
-      apiRequest("POST", "/api/cart", {
-        productId: product.id,
-        quantity: 1,
-      }),
+    mutationFn: async () => {
+      if (!user) {
+        throw new Error("Please sign in to add items to cart");
+      }
+      return apiRequest("POST", "/api/cart", { productId: product.id, quantity: 1 });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
       toast({
         title: "Added to cart",
-        description: `${product.name} has been added to your cart`,
+        description: "Product added successfully!",
         action: (
           <Button 
             size="sm" 
             variant="default"
             onClick={() => navigate("/cart")}
+            data-testid="button-go-to-cart"
           >
             Go to Cart
           </Button>
         )
       });
     },
-    onError: () => {
-      toast({
-        title: "Failed to add to cart",
-        description: "Please try again",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      if (error.message.includes("sign in")) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to add items to cart",
+          variant: "destructive",
+        });
+      }
     },
   });
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!user) {
-      toast({
-        title: "Please sign in",
-        description: "You need to sign in to add items to cart",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    addToCartMutation.mutate();
-  };
-
   return (
-    <Card className="overflow-hidden hover-elevate cursor-pointer group" data-testid={`card-product-${product.id}`}>
-      <Link href={`/product/${product.slug || product.id}`}>
-        <div className="relative aspect-square overflow-hidden">
-          <img
-            src={product.image}
+    <Link href={`/product/${product.slug || product.id}`}>
+      <Card className="hover-elevate h-full cursor-pointer overflow-hidden" data-testid={`card-product-${product.id}`}>
+        <div className="relative h-48 bg-gray-100 overflow-hidden">
+          <img 
+            src={product.image} 
             alt={product.name}
-            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+            className="w-full h-full object-cover hover:scale-105 transition-transform"
           />
-          <Button
-            size="icon"
-            variant="secondary"
-            className="absolute top-4 right-4 rounded-full"
+          {Math.random() > 0.5 && (
+            <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+              20% Off
+            </div>
+          )}
+        </div>
+        <CardContent className="pt-4 pb-4">
+          <h3 className="font-semibold text-lg mb-1 line-clamp-2">{product.name}</h3>
+          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+          
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl font-bold text-green-600">₹{Math.round((Number(product.price) || 0) * 0.8)}</span>
+            <span className="text-sm text-gray-500 line-through">₹{Number(product.price) || 0}</span>
+          </div>
+
+          <div className="flex items-center gap-1 mb-4">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+            ))}
+            <span className="text-xs text-gray-600 ml-1">(124 reviews)</span>
+          </div>
+
+          <Button 
             onClick={(e) => {
               e.preventDefault();
+              addToCartMutation.mutate();
             }}
-            data-testid={`button-wishlist-${product.id}`}
+            disabled={addToCartMutation.isPending}
+            className="w-full bg-green-600 hover:bg-green-700"
+            data-testid={`button-add-to-cart-${product.id}`}
           >
-            <Heart className="h-4 w-4" />
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
           </Button>
-        </div>
-      </Link>
-      <CardContent className="p-6">
-        <Link href={`/product/${product.slug || product.id}`}>
-          <h3 className="font-semibold text-xl mb-2" data-testid={`text-product-name-${product.id}`}>
-            {product.name}
-          </h3>
-          <p className="text-2xl font-bold text-primary" data-testid={`text-product-price-${product.id}`}>
-            ₹{Number(product.price).toFixed(2)}
-          </p>
-        </Link>
-        <Button 
-          className="w-full mt-4" 
-          onClick={handleAddToCart}
-          disabled={addToCartMutation.isPending}
-          data-testid={`button-add-to-cart-${product.id}`}
-        >
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Card className="text-center p-6">
-      <CardContent className="pt-6">
-        <div className="flex justify-center mb-4">{icon}</div>
-        <h3 className="font-semibold text-xl mb-2">{title}</h3>
-        <p className="text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
