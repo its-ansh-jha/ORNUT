@@ -1,6 +1,5 @@
 import { Link, useLocation } from "wouter";
 import { LayoutGrid, Star, HelpCircle, ShieldCheck, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 
 export function MobileNav() {
@@ -25,21 +24,17 @@ export function MobileNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-background border-t border-border">
-      <div className="flex items-center justify-around h-16">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href}>
-            <Button
-              variant={isActive(href) ? "default" : "ghost"}
-              className={`flex flex-col items-center gap-1 h-auto py-2 px-3 rounded-lg`}
-              data-testid={`mobile-nav-${label.toLowerCase()}`}
-            >
-              <Icon className="h-5 w-5" />
-              <span className="text-xs font-medium">{label}</span>
-            </Button>
-          </Link>
-        ))}
-      </div>
+    <nav className="fixed bottom-0 left-0 w-full md:hidden bg-white dark:bg-slate-950 border-t border-[#ddd] dark:border-slate-700 flex justify-around py-2 shadow-[0_-3px_10px_rgba(0,0,0,0.1)] z-[9999]">
+      {navItems.map(({ href, label, icon: Icon }) => (
+        <Link 
+          key={href} 
+          href={href}
+          className="no-underline text-[#333] dark:text-gray-300 text-sm flex flex-col items-center transition-all duration-200 hover:text-[#28a745] dark:hover:text-[#28a745] hover:-translate-y-1 active:scale-95"
+        >
+          <Icon className="h-5 w-5 mb-1" />
+          <span className="text-xs font-medium">{label}</span>
+        </Link>
+      ))}
     </nav>
   );
 }
