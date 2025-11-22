@@ -203,7 +203,7 @@ export function AIAssistant({ onAddToCart }: { onAddToCart?: (productId: string)
     <div style={{ 
       position: "fixed", 
       bottom: "100px", 
-      left: "24px", 
+      right: "24px", 
       zIndex: 99999, 
       width: "384px", 
       maxWidth: "calc(100vw - 48px)",
