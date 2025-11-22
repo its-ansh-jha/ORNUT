@@ -1046,6 +1046,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin product management
+  app.get("/api/admin/products", verifyAdmin, async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      res.json(products);
+    } catch (error) {
+      console.error("Get products error:", error);
+      res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+
   app.post("/api/admin/products", verifyAdmin, async (req, res) => {
     try {
       const validated = insertProductSchema.parse(req.body);
