@@ -1083,6 +1083,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Trigger notification endpoint
+  app.post("/api/admin/trigger-notification", verifyAdmin, async (req, res) => {
+    try {
+      const PRODUCT_NOTIFICATIONS = [
+        {
+          title: 'Peanut Butter Khana Hai!',
+          message: 'Fresh creamy peanut butter now available - 100% natural & delicious',
+        },
+        {
+          title: 'Chocolate wala Peanut Butter',
+          message: 'Taste me Yummy Hota haina - Premium chocolate peanut spread',
+        },
+        {
+          title: 'Crunchy Spread Alert!',
+          message: 'Love crunchy texture? Try our new crunchy peanut butter',
+        }
+      ];
+
+      // Pick a random notification
+      const randomNotification = PRODUCT_NOTIFICATIONS[Math.floor(Math.random() * PRODUCT_NOTIFICATIONS.length)];
+      
+      // Log that the admin triggered a notification
+      console.log(`Admin triggered notification: ${randomNotification.title}`);
+      
+      // Return the notification that was triggered
+      res.json({
+        success: true,
+        title: randomNotification.title,
+        message: randomNotification.message,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Trigger notification error:", error);
+      res.status(500).json({ error: "Failed to trigger notification" });
+    }
+  });
+
   // AI Assistant chat endpoint (streaming)
   app.post("/api/chat", async (req, res) => {
     try {

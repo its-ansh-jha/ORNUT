@@ -187,9 +187,9 @@ function NotificationManagement() {
 }
 
 function DashboardStats() {
-  const { data: stats } = useQuery<any>({
+  const { data: stats } = useQuery({
     queryKey: ["/api/admin/stats"],
-    queryFn: adminQueryFn,
+    queryFn: () => adminQueryFn({ queryKey: ["/api/admin/stats"] }),
   });
 
   return (
