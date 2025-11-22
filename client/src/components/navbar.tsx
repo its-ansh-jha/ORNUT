@@ -18,7 +18,7 @@ import { useState } from "react";
 import logoImage from "@assets/IMG-20251106-WA0028_1762432081376.jpg";
 
 export function Navbar() {
-  const { user, signInWithGoogle, logout } = useAuth();
+  const { user, signingIn, signInWithGoogle, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [, navigate] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -163,8 +163,12 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={signInWithGoogle} data-testid="button-signin">
-                Sign In
+              <Button 
+                onClick={signInWithGoogle} 
+                disabled={signingIn}
+                data-testid="button-signin"
+              >
+                {signingIn ? "Signing in..." : "Sign In"}
               </Button>
             )}
 

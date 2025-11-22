@@ -6,6 +6,7 @@ import { apiRequest, queryClient } from "./queryClient";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  signingIn: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [signingIn, setSigningIn] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setUser(firebaseUser);
       setLoading(false);
+      setSigningIn(false);
     });
 
     return () => unsubscribe();
@@ -39,9 +42,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
+      setSigningIn(true);
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error("Error signing in:", error);
+      setSigningIn(false);
       throw error;
     }
   };
@@ -57,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, signingIn, signInWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );
