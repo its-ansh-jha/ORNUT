@@ -96,6 +96,7 @@ IMPORTANT GUIDELINES:
 - When recommending products, use the EXACT product ID from the catalog so users can add them to cart
 - Be enthusiastic about health benefits but don't make medical claims
 - If asked about topics outside peanut butter/nutrition/Ornut, politely redirect to what you can help with
+- If users ask for support, assistance, or need help contacting Ornut, provide the support email: support@peanutproducts.in
 
 AVAILABLE PRODUCTS:
 ${JSON.stringify(productContext, null, 2)}
@@ -200,6 +201,7 @@ IMPORTANT GUIDELINES:
 - When recommending products, use the EXACT product ID from the catalog so users can add them to cart
 - Be enthusiastic about health benefits but don't make medical claims
 - If asked about topics outside peanut butter/nutrition/Ornut, politely redirect to what you can help with
+- If users ask for support, assistance, or need help contacting Ornut, provide the support email: support@peanutproducts.in
 
 AVAILABLE PRODUCTS:
 ${JSON.stringify(productContext, null, 2)}
