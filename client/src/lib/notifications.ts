@@ -38,10 +38,8 @@ export async function subscribeToPushNotifications() {
     let subscription = await registration.pushManager.getSubscription();
     
     if (!subscription) {
-      // Create a subscription (for demo purposes, we'll use local notifications)
-      subscription = {
-        endpoint: 'local-notifications'
-      };
+      // For demo purposes, return null (using local notifications instead)
+      return null;
     }
     
     return subscription;
@@ -62,14 +60,14 @@ export async function sendNotification(title: string, options: {
       // For local notifications (no backend server needed)
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.ready;
-        registration.showNotification(title, {
+        const notificationOptions: NotificationOptions = {
           body: options.message,
           icon: options.image || '/logo.png',
           badge: '/logo.png',
-          image: options.image,
           tag: options.tag || 'ornut-notification',
           requireInteraction: false
-        });
+        };
+        registration.showNotification(title, notificationOptions);
       }
     }
   }
@@ -149,4 +147,19 @@ export function initializeNotificationTimer() {
   }, 60000); // Check every minute
   
   return intervalId;
+}
+
+export async function triggerNotificationNow() {
+  // Force send a random notification immediately
+  const notification = getRandomNotification();
+  
+  await sendNotification(notification.title, {
+    message: notification.message,
+    tag: `notification-${Date.now()}`
+  });
+  
+  // Update timestamp
+  updateLastNotificationTime();
+  
+  return notification;
 }

@@ -12,7 +12,7 @@ import { Footer } from "@/components/footer";
 import { AIAssistant } from "@/components/ai-assistant";
 import { Button } from "@/components/ui/button";
 import { NotificationPrompt } from "@/components/notification-prompt";
-import { registerServiceWorker, requestNotificationPermission, initializeNotificationTimer } from "@/lib/notifications";
+import { registerServiceWorker, requestNotificationPermission, initializeNotificationTimer, triggerNotificationNow } from "@/lib/notifications";
 import Home from "@/pages/home";
 import Products from "@/pages/products";
 import ProductDetail from "@/pages/product-detail";
@@ -97,6 +97,10 @@ function AppContent() {
       if (hasPermission) {
         // Initialize notification timer with 16+ min intervals
         initializeNotificationTimer();
+        
+        // Expose trigger function to window for testing
+        (window as any).triggerOrnutNotification = triggerNotificationNow;
+        console.log('✅ To trigger a notification, run: window.triggerOrnutNotification()');
       }
     };
 
